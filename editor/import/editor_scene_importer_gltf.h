@@ -82,27 +82,12 @@ class EditorSceneImporterGLTF : public EditorSceneImporter {
 
 		Transform xform;
 		String name;
-		//Node *godot_node;
-		//int godot_bone_index;
 
 		int mesh;
 		int camera;
 		int skin;
-		//int skeleton_skin;
-		//int child_of_skeleton; // put as children of skeleton
-		//Vector<int> skeleton_children; //skeleton put as children of this
 
-		struct Joint {
-			int skin;
-			int bone;
-			int godot_bone_index;
-
-			Joint() {
-				skin = -1;
-				bone = -1;
-				godot_bone_index = -1;
-			}
-		};
+		bool joint;
 
 		Vector<Joint> joints;
 
@@ -119,10 +104,8 @@ class EditorSceneImporterGLTF : public EditorSceneImporter {
 				mesh(-1),
 				camera(-1),
 				skin(-1),
-				//skeleton_skin(-1),
-				//child_of_skeleton(-1),
-				scale(Vector3(1, 1, 1)) {
-		}
+				joint(false),
+				scale(Vector3(1, 1, 1)) {}
 	};
 
 	struct GLTFBufferView {
@@ -182,18 +165,26 @@ class EditorSceneImporterGLTF : public EditorSceneImporter {
 	struct GLTFSkin {
 
 		String name;
-		struct Bone {
+
+		struct Joint {
 			Transform inverse_bind;
 			int node;
 		};
 
-		int skeleton;
-		Vector<Bone> bones;
+		int skeleton_node;
+
+		// Set of all nodes we thing need to belong to this skin
+		Set<int> nodes;
+
+		// Node index to Joint Map
+		Map<int, Joint> joints;
+
+		//Vector<Joint> bones;
 
 		//matrices need to be transformed to this
 
 		GLTFSkin() {
-			skeleton = -1;
+			skeleton_node = -1;
 		}
 	};
 
@@ -322,6 +313,9 @@ class EditorSceneImporterGLTF : public EditorSceneImporter {
 	Error _parse_textures(GLTFState &state);
 
 	Error _parse_materials(GLTFState &state);
+
+	bool _expand_skin(GLTFState &state, GLTFSkin &skin, const int node_index);
+	Error _expand_skins(GLTFState &state);
 
 	Error _parse_skins(GLTFState &state);
 

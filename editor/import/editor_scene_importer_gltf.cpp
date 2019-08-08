@@ -214,13 +214,6 @@ Error EditorSceneImporterGLTF::_parse_nodes(GLTFState &state) {
 		}
 		if (n.has("skin")) {
 			node->skin = n["skin"];
-			/*
-			if (!state.skin_users.has(node->skin)) {
-				state.skin_users[node->skin] = Vector<int>();
-			}
-
-			state.skin_users[node->skin].push_back(i);
-			*/
 		}
 		if (n.has("matrix")) {
 			node->xform = _arr_to_xform(n["matrix"]);
@@ -1399,12 +1392,47 @@ Error EditorSceneImporterGLTF::_parse_materials(GLTFState &state) {
 	return OK;
 }
 
+bool EditorSceneImporterGLTF::_expand_skin(GLTFState &state, GLTFSkin &skin, const int node_index) {
+	bool found_joint = false;
+
+	for (int i = 0; i < state.nodes[node_index]->children.size(); ++i) {
+		found_joint |= _expand_skin(state, skin, state.nodes[node_index]->children[i]);
+	}
+
+	if (found_joint)
+		skin.nodes.insert(node_index);
+
+	if (skin.joints.find(node_index))
+		return true;
+
+	return false;
+}
+
+Error EditorSceneImporterGLTF::_expand_skins(GLTFState &state) {
+
+	for (int i = 0; i < state.skins.size(); ++i) {
+		GLTFSkin &skin = state.skins.write[i];
+
+		if (skin.skeleton_node != -1)
+			_expand_skin(state, skin, skin.skeleton_node);
+
+		for (Map<int, GLTFSkin::Joint>::Element *joint = skin.joints.front(); joint != nullptr; joint = joint->next()) {
+			const int node_index = joint->key;
+			_expand_skin(state, skin, node_index);
+		}
+	}
+
+	return OK;
+}
+
 Error EditorSceneImporterGLTF::_parse_skins(GLTFState &state) {
 
 	if (!state.json.has("skins"))
 		return OK;
 
 	Array skins = state.json["skins"];
+
+	// Create the base skins, and mark nodes that are joints
 	for (int i = 0; i < skins.size(); i++) {
 
 		Dictionary d = skins[i];
@@ -1422,85 +1450,41 @@ Error EditorSceneImporterGLTF::_parse_skins(GLTFState &state) {
 		}
 
 		for (int j = 0; j < joints.size(); j++) {
-			int index = joints[j];
+			int node = joints[j];
 			ERR_FAIL_INDEX_V(index, state.nodes.size(), ERR_PARSE_ERROR);
-			GLTFNode::Joint joint;
-			joint.skin = state.skins.size();
-			joint.bone = j;
-			state.nodes[index]->joints.push_back(joint);
-			GLTFSkin::Bone bone;
-			bone.node = index;
+
+			GLTFSkin::Joint joint;
+			joint.node = node;
 			if (bind_matrices.size()) {
-				bone.inverse_bind = bind_matrices[j];
+				joint.inverse_bind = bind_matrices[j];
 			}
 
-			skin.bones.push_back(bone);
+			state.nodes[node]->joint = true;
+
+			skin.nodes.insert(node);
+			skin.joints.insert(node, joint);
 		}
 
 		print_verbose("glTF: Skin has skeleton? " + itos(d.has("skeleton")));
 		if (d.has("skeleton")) {
-			int skeleton = d["skeleton"];
-			ERR_FAIL_INDEX_V(skeleton, state.nodes.size(), ERR_PARSE_ERROR);
-			print_verbose("glTF: Setting skeleton skin to" + itos(skeleton));
-			skin.skeleton = skeleton;
-			if (!state.skeleton_nodes.has(skeleton)) {
-				state.skeleton_nodes[skeleton] = Vector<int>();
-			}
-			state.skeleton_nodes[skeleton].push_back(i);
+			int skeleton_node = d["skeleton"];
+			ERR_FAIL_INDEX_V(skeleton_node, state.nodes.size(), ERR_PARSE_ERROR);
+			print_verbose("glTF: Setting skeleton node to" + itos(skeleton_node));
+			skin.skeleton_node = skeleton_node;
+
+			skin.nodes.insert(skeleton_node);
+			if (state.nodes[skeleton_node]->joint)
+				state.skeleton_nodes[skeleton].push_back(i);
 		}
 
 		if (d.has("name")) {
 			skin.name = d["name"];
 		}
 
-		//locate the right place to put a Skeleton node
-		/*
-		if (state.skin_users.has(i)) {
-			Vector<int> users = state.skin_users[i];
-			int skin_node = -1;
-			for (int j = 0; j < users.size(); j++) {
-				int user = state.nodes[users[j]]->parent; //always go from parent
-				if (j == 0) {
-					skin_node = user;
-				} else if (skin_node != -1) {
-					bool found = false;
-					while (skin_node >= 0) {
-
-						int cuser = user;
-						while (cuser != -1) {
-							if (cuser == skin_node) {
-								found = true;
-								break;
-							}
-							cuser = state.nodes[skin_node]->parent;
-						}
-						if (found)
-							break;
-						skin_node = state.nodes[skin_node]->parent;
-					}
-
-					if (!found) {
-						skin_node = -1; //just leave where it is
-					}
-
-					//find a common parent
-				}
-			}
-
-			if (skin_node != -1) {
-				for (int j = 0; j < users.size(); j++) {
-					state.nodes[users[j]]->child_of_skeleton = i;
-				}
-
-				state.nodes[skin_node]->skeleton_children.push_back(i);
-			}
-		}
-		*/
 		state.skins.push_back(skin);
 	}
-	print_verbose("glTF: Total skins: " + itos(state.skins.size()));
 
-	//now
+	print_verbose("glTF: Total skins: " + itos(state.skins.size()));
 
 	return OK;
 }
@@ -2249,6 +2233,10 @@ Node *EditorSceneImporterGLTF::import_scene(const String &p_path, uint32_t p_fla
 
 	/* STEP 9 PARSE SKINS */
 	err = _parse_skins(state);
+	if (err != OK)
+		return NULL;
+
+	err = _expand_skins(state);
 	if (err != OK)
 		return NULL;
 
