@@ -39,35 +39,46 @@
 */
 
 /* This DisjointSet class uses Find with path compression and Union by rank */
-template <typename T, class AL = DefaultAllocator>
+template <typename T, class C = Comparator<T>, class AL = DefaultAllocator>
 class DisjointSet {
 
 	struct Element {
 		T object;
-		const Element *parent = nullptr;
+		Element *parent = nullptr;
 		int rank = 0;
 	};
 
-	typedef Map<T, Element *, AL> MapT;
+	typedef Map<T, Element *, C, AL> MapT;
 
 	MapT elements;
 
 	Element *find(Element *element);
 
-	_FORCE_INLINE_ Element *add(T object);
+	_FORCE_INLINE_ Element *insert_or_get(T object);
 
 public:
-	_FORCE_INLINE_ void insert(T object) { (void)add(object); }
+	~DisjointSet();
+
+	_FORCE_INLINE_ void insert(T object) { (void)insert_or_get(object); }
 
 	void create_union(T a, T b);
 
-	void find_roots(Vector<T> out_roots);
+	void find_set_owners(Vector<T> &out_roots);
+
+	void get_set(Vector<T> &out_children, T root);
 };
 
 /* FUNCTIONS */
 
-template <typename T, class AL>
-typename DisjointSet<T, AL>::Element *DisjointSet<T, AL>::find(Element *element) {
+template <typename T, class C, class AL>
+DisjointSet<T, C, AL>::~DisjointSet() {
+	for (MapT::Element *itr = elements.front(); itr != nullptr; itr = itr->next()) {
+		memdelete_allocator<Element, AL>(itr->value());
+	}
+}
+
+template <typename T, class C, class AL>
+typename DisjointSet<T, C, AL>::Element *DisjointSet<T, C, AL>::find(Element *element) {
 	if (element->parent != element) {
 		element->parent = find(element->parent);
 	}
@@ -75,10 +86,12 @@ typename DisjointSet<T, AL>::Element *DisjointSet<T, AL>::find(Element *element)
 	return element->parent;
 }
 
-template <typename T, class AL>
-typename DisjointSet<T, AL>::Element *DisjointSet<T, AL>::add(T object) {
-
-	ERR_FAIL_COND(elements.find(object) != nullptr);
+template <typename T, class C, class AL>
+typename DisjointSet<T, C, AL>::Element *DisjointSet<T, C, AL>::insert_or_get(T object) {
+	MapT::Element *itr = elements.find(object);
+	if (itr != nullptr) {
+		return itr->value();
+	}
 
 	Element *new_element = memnew_allocator(Element, AL);
 	new_element->object = object;
@@ -88,26 +101,11 @@ typename DisjointSet<T, AL>::Element *DisjointSet<T, AL>::add(T object) {
 	return new_element;
 }
 
-template <typename T, class AL>
-void DisjointSet<T, AL>::create_union(T a, T b) {
+template <typename T, class C, class AL>
+void DisjointSet<T, C, AL>::create_union(T a, T b) {
 
-	MapT::Element *x_map_find = elements.find(a);
-	MapT::Element *y_map_find = elements.find(b);
-
-	Element *x, y;
-
-	// Find, or create elements if they do not exist
-	if (x_map_find == nullptr) {
-		x = add(a);
-	} else {
-		x = x_map_find->value();
-	}
-
-	if (y_map_find == nullptr) {
-		y = add(y);
-	} else {
-		y = y_map_find->value();
-	}
+	Element *x = insert_or_get(a);
+	Element *y = insert_or_get(b);
 
 	Element *x_root = find(x);
 	Element *y_root = find(y);
@@ -128,12 +126,28 @@ void DisjointSet<T, AL>::create_union(T a, T b) {
 	}
 }
 
-template <typename T, class AL>
-void DisjointSet<T, AL>::find_roots(Vector<T> out_roots) {
-	for (MapT::Element *map_element = elements.front(); map_element != nullptr; map_element = map_element->next()) {
-		Element *element = map_element->value();
+template <typename T, class C, class AL>
+void DisjointSet<T, C, AL>::find_set_owners(Vector<T> &out_owners) {
+	for (MapT::Element *itr = elements.front(); itr != nullptr; itr = itr->next()) {
+		Element *element = itr->value();
 		if (element->parent == element) {
-			out_roots.push_back(element->object);
+			out_owners.push_back(element->object);
+		}
+	}
+}
+
+template <typename T, class C, class AL>
+void DisjointSet<T, C, AL>::get_set(Vector<T> &out_children, T owner) {
+	MapT::Element *itr = elements.find(owner);
+	ERR_FAIL_COND(itr == nullptr);
+
+	Element *element = itr->value();
+	ERR_FAIL_COND(element->parent != element);
+
+	for (MapT::Element *itr = elements.front(); itr != nullptr; itr = itr->next()) {
+		Element *found_owner = find(itr->value());
+		if (found_owner == element) {
+			out_children.push_back(itr->key());
 		}
 	}
 }
