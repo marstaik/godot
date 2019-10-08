@@ -156,6 +156,7 @@ bool Skeleton::_get(const StringName &p_path, Variant &r_ret) const {
 }
 void Skeleton::_get_property_list(List<PropertyInfo> *p_list) const {
 
+	
 	for (int i = 0; i < bones.size(); i++) {
 
 		String prep = "bones/" + itos(i) + "/";
@@ -171,6 +172,7 @@ void Skeleton::_get_property_list(List<PropertyInfo> *p_list) const {
 		p_list->push_back(PropertyInfo(Variant::TRANSFORM, prep + "pose", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR));
 		p_list->push_back(PropertyInfo(Variant::ARRAY, prep + "bound_children"));
 	}
+	
 }
 
 void Skeleton::_update_process_order() {
@@ -575,6 +577,11 @@ int Skeleton::get_process_order(int p_idx) {
 	ERR_FAIL_INDEX_V(p_idx, bones.size(), -1);
 	_update_process_order();
 	return process_order[p_idx];
+}
+
+const Vector<int> &Skeleton::get_process_order() {
+	_update_process_order();
+	return process_order;
 }
 
 void Skeleton::localize_rests() {

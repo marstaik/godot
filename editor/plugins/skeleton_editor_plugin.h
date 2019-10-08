@@ -35,28 +35,23 @@
 #include "editor/editor_plugin.h"
 #include "scene/3d/skeleton.h"
 
-class PhysicalBone;
-class Joint;
+class SkeletonEditorPlugin;
 
-class SkeletonEditor : public Node {
-	GDCLASS(SkeletonEditor, Node);
+class SkeletonEditor : public VBoxContainer {
 
-	enum Menu {
-		MENU_OPTION_CREATE_PHYSICAL_SKELETON
-	};
+	GDCLASS(SkeletonEditor, VBoxContainer);
 
-	struct BoneInfo {
-		PhysicalBone *physical_bone;
-		Transform relative_rest; // Relative to skeleton node
-		BoneInfo() :
-				physical_bone(NULL) {}
-	};
+	void update_tree();
 
-	Skeleton *skeleton;
+	EditorNode *editor;
+	SkeletonEditorPlugin *plugin;
+	Skeleton* skeleton;
 
-	MenuButton *options;
+	
+	Tree* joint_tree;
+	EditorPropertyTransform *tform_editor;
 
-	void _on_click_option(int p_option);
+	UndoRedo *undo_redo;
 
 	friend class SkeletonEditorPlugin;
 
@@ -65,22 +60,24 @@ protected:
 	void _node_removed(Node *p_node);
 	static void _bind_methods();
 
-	void create_physical_skeleton();
-	PhysicalBone *create_physical_bone(int bone_id, int bone_child_id, const Vector<BoneInfo> &bones_infos);
-
 public:
+	Skeleton *get_skeleton() const { return skeleton; };
+
+	void set_undo_redo(UndoRedo *p_undo_redo) { undo_redo = p_undo_redo; }
 	void edit(Skeleton *p_node);
 
-	SkeletonEditor();
+	SkeletonEditor(EditorNode *p_editor, SkeletonEditorPlugin *p_plugin);
 	~SkeletonEditor();
+
+	static SkeletonEditor *singleton;
 };
 
 class SkeletonEditorPlugin : public EditorPlugin {
 
 	GDCLASS(SkeletonEditorPlugin, EditorPlugin);
 
-	EditorNode *editor;
 	SkeletonEditor *skeleton_editor;
+	EditorNode *editor;
 
 public:
 	virtual String get_name() const { return "Skeleton"; }
