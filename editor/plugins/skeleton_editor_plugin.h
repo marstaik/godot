@@ -36,22 +36,22 @@
 #include "scene/3d/skeleton.h"
 
 class SkeletonEditorPlugin;
+class EditorInspectorPluginSkeleton;
 
 class SkeletonEditor : public VBoxContainer {
 
 	GDCLASS(SkeletonEditor, VBoxContainer);
 
-	void update_tree();
+	void update_joint_tree();
 
-	Skeleton* skeleton;
+	EditorInspectorPluginSkeleton *editor_plugin;
 
-	
-	Tree* joint_tree;
-	EditorPropertyTransform *tform_editor;
+	Skeleton *skeleton;
+
+	Tree *joint_tree;
+	EditorPropertyTransform *rest_editor;
 
 	UndoRedo *undo_redo;
-
-	friend class SkeletonEditorPlugin;
 
 protected:
 	void _notification(int p_what);
@@ -62,9 +62,12 @@ public:
 	Skeleton *get_skeleton() const { return skeleton; };
 
 	void set_undo_redo(UndoRedo *p_undo_redo) { undo_redo = p_undo_redo; }
-	void edit(Skeleton *p_node);
 
-	SkeletonEditor();
+	void _joint_tree_selection_changed();
+
+	void add_controls(EditorInspectorPlugin *plugin);
+
+	SkeletonEditor(EditorInspectorPluginSkeleton *e_plugin, Skeleton *skeleton);
 	~SkeletonEditor();
 };
 

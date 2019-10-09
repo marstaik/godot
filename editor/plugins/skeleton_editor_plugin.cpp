@@ -30,22 +30,33 @@
 
 #include "skeleton_editor_plugin.h"
 
-#include "scene/3d/collision_shape.h"
-#include "scene/3d/physics_body.h"
-#include "scene/3d/physics_joint.h"
-#include "scene/resources/capsule_shape.h"
-#include "scene/resources/sphere_shape.h"
+//#include "scene/3d/collision_shape.h"
+//#include "scene/3d/physics_body.h"
+//#include "scene/3d/physics_joint.h"
+//#include "scene/resources/capsule_shape.h"
+//#include "scene/resources/sphere_shape.h"
 #include "spatial_editor_plugin.h"
 
-void SkeletonEditor::edit(Skeleton *p_node) {
+void SkeletonEditor::_joint_tree_selection_changed() {
+	TreeItem *selected = joint_tree->get_selected();
+	const String path = selected->get_metadata(0);
 
-	skeleton = p_node;
+	if (path.begins_with("bones/")) {
+		const int b_idx = path.get_slicec('/', 1).to_int();
+		const String bone_name = skeleton->get_bone_name(b_idx);
 
-	update_tree();
-	update();
+		rest_editor->set_object_and_property(skeleton, "bones/" + itos(b_idx) + "/rest");
+		rest_editor->update_property();
+		rest_editor->set_label("Bone Rest: " + bone_name);
+	}
 }
 
-void SkeletonEditor::update_tree() {
+void SkeletonEditor::add_controls(EditorInspectorPlugin *plugin) {
+	plugin->add_custom_control(this);
+	plugin->add_property_editor("Skeleton/rest_editor", rest_editor);
+}
+
+void SkeletonEditor::update_joint_tree() {
 	joint_tree->clear();
 
 	if (skeleton == nullptr)
@@ -59,7 +70,9 @@ void SkeletonEditor::update_tree() {
 
 	const Vector<int> &joint_porder = skeleton->get_process_order();
 
-	Ref<Texture> bone_icon = get_icon("BoneAttachment", "EditorIcons");
+	bool icon_exists = has_icon("BoneAttachment", "EditorIcons");
+	Ref<Texture> bone_icon = EditorNode::get_singleton()->get_class_icon("BoneAttachment");
+	//const Ref<Texture> &bone_icon = get_icon("BoneAttachment", "EditorIcons");
 
 	for (int i = 0; i < joint_porder.size(); ++i) {
 		const int b_idx = joint_porder[i];
@@ -73,6 +86,7 @@ void SkeletonEditor::update_tree() {
 		joint_item->set_text(0, skeleton->get_bone_name(b_idx));
 		joint_item->set_icon(0, bone_icon);
 		joint_item->set_selectable(0, true);
+		joint_item->set_metadata(0, "bones/" + itos(b_idx));
 	}
 }
 
@@ -91,19 +105,19 @@ void SkeletonEditor::_node_removed(Node *p_node) {
 
 void SkeletonEditor::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_node_removed"), &SkeletonEditor::_node_removed);
+	ClassDB::bind_method(D_METHOD("_joint_tree_selection_changed"), &SkeletonEditor::_joint_tree_selection_changed);
 }
 
-SkeletonEditor::SkeletonEditor() {
-	skeleton = nullptr;
+SkeletonEditor::SkeletonEditor(EditorInspectorPluginSkeleton *e_plugin, Skeleton *sk) :
+		editor_plugin(e_plugin),
+		skeleton(sk) {
 
 	set_focus_mode(FOCUS_ALL);
 
-	set_custom_minimum_size(Size2(1, 150) * EDSCALE);
-
-	HBoxContainer *hbox = memnew(HBoxContainer);
-	hbox->set_v_size_flags(SIZE_EXPAND_FILL);
-	hbox->set_h_size_flags(SIZE_EXPAND_FILL);
-	add_child(hbox);
+	ScrollContainer *s_con = memnew(ScrollContainer);
+	s_con->set_h_size_flags(SIZE_EXPAND_FILL);
+	s_con->set_custom_minimum_size(Size2(1, 350) * EDSCALE);
+	add_child(s_con);
 
 	joint_tree = memnew(Tree);
 	joint_tree->set_columns(1);
@@ -112,13 +126,15 @@ SkeletonEditor::SkeletonEditor() {
 	joint_tree->set_v_size_flags(SIZE_EXPAND_FILL);
 	joint_tree->set_h_size_flags(SIZE_EXPAND_FILL);
 	joint_tree->set_allow_rmb_select(true);
-	hbox->add_child(joint_tree);
+	s_con->add_child(joint_tree);
 
-	/*tform_editor = memnew(EditorPropertyTransform);
-	tform_editor->set_object_and_property(skeleton, "/bone/0/pose");
-	tform_editor->set_h_size_flags(SIZE_EXPAND);
-	tform_editor->set_v_size_flags(SIZE_EXPAND_FILL);
-	hbox->add_child(tform_editor);*/
+	rest_editor = memnew(EditorPropertyTransform);
+	rest_editor->set_h_size_flags(SIZE_EXPAND_FILL);
+	rest_editor->setup(-100000, 100000, 0.001, true);
+
+	// Update the tree  at the end
+	update_joint_tree();
+	joint_tree->connect("item_selected", this, "_joint_tree_selection_changed");
 }
 
 SkeletonEditor::~SkeletonEditor() {}
@@ -131,9 +147,8 @@ void EditorInspectorPluginSkeleton::parse_begin(Object *p_object) {
 	Skeleton *skeleton = Object::cast_to<Skeleton>(p_object);
 	ERR_FAIL_COND(!skeleton);
 
-	SkeletonEditor *editor = memnew(SkeletonEditor);
-	editor->edit(skeleton);
-	add_custom_control(editor);
+	SkeletonEditor *editor = memnew(SkeletonEditor(this, skeleton));
+	editor->add_controls(this);
 }
 
 SkeletonEditorPlugin::SkeletonEditorPlugin(EditorNode *p_node) {
