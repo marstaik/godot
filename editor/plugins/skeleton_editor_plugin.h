@@ -43,8 +43,6 @@ class SkeletonEditor : public VBoxContainer {
 
 	void update_tree();
 
-	EditorNode *editor;
-	SkeletonEditorPlugin *plugin;
 	Skeleton* skeleton;
 
 	
@@ -66,28 +64,25 @@ public:
 	void set_undo_redo(UndoRedo *p_undo_redo) { undo_redo = p_undo_redo; }
 	void edit(Skeleton *p_node);
 
-	SkeletonEditor(EditorNode *p_editor, SkeletonEditorPlugin *p_plugin);
+	SkeletonEditor();
 	~SkeletonEditor();
+};
 
-	static SkeletonEditor *singleton;
+class EditorInspectorPluginSkeleton : public EditorInspectorPlugin {
+	GDCLASS(EditorInspectorPluginSkeleton, EditorInspectorPlugin);
+
+public:
+	virtual bool can_handle(Object *p_object);
+	virtual void parse_begin(Object *p_object);
 };
 
 class SkeletonEditorPlugin : public EditorPlugin {
-
 	GDCLASS(SkeletonEditorPlugin, EditorPlugin);
 
-	SkeletonEditor *skeleton_editor;
-	EditorNode *editor;
-
 public:
-	virtual String get_name() const { return "Skeleton"; }
-	virtual bool has_main_screen() const { return false; }
-	virtual void edit(Object *p_object);
-	virtual bool handles(Object *p_object) const;
-	virtual void make_visible(bool p_visible);
-
 	SkeletonEditorPlugin(EditorNode *p_node);
-	~SkeletonEditorPlugin();
+
+	virtual String get_name() const { return "Skeleton"; }
 };
 
 #endif // SKELETON_EDITOR_PLUGIN_H
