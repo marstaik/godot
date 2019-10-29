@@ -1011,6 +1011,13 @@ Control *EditorInspectorCategory::make_custom_tooltip(const String &p_text) cons
 	return help_bit;
 }
 
+
+void EditorInspectorCategory::setup(const String &p_label, const Ref<Texture> &p_icon, const Color& p_bg_color) {
+	label = p_label;
+	icon = p_icon;
+	bg_color = p_bg_color;
+}
+
 Size2 EditorInspectorCategory::get_minimum_size() const {
 
 	Ref<Font> font = get_font("font", "Tree");

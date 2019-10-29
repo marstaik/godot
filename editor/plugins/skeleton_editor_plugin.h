@@ -38,20 +38,73 @@
 class SkeletonEditorPlugin;
 class EditorInspectorPluginSkeleton;
 
+class TransformEditor : public VBoxContainer {
+	GDCLASS(TransformEditor, VBoxContainer);
+
+	EditorSpinSlider *translation[3];
+	EditorSpinSlider *rotation[3];
+	EditorSpinSlider *scale[3];
+
+	EditorSpinSlider *transform[12];
+
+	Object *object;
+	String property;
+	bool disabled;
+	String label;
+
+	void create_editors();
+	void setup_spinner(EditorSpinSlider *spinner);
+
+protected:
+	void _notification(int p_what);
+
+public:
+	TransformEditor(Object *p_object);
+
+	void set_object_and_target(Object *p_object, const String &p_prop);
+	void _update_properties();
+	void set_label(const String &p_label) { label = p_label; }
+};
+
+class BoneEditor : public VBoxContainer {
+	GDCLASS(BoneEditor, VBoxContainer);
+
+	Skeleton *skeleton;
+	BoneId bone_id;
+
+	TransformEditor *rest;
+	TransformEditor *pose;
+
+	bool rest_disabled;
+
+public:
+	BoneEditor(Skeleton *p_skeleton);
+
+	void set_bone(const BoneId p_bone_id);
+
+	void set_rest_disabled(const bool p_disabled);
+	void _update_properties();
+};
+
 class SkeletonEditor : public VBoxContainer {
 
 	GDCLASS(SkeletonEditor, VBoxContainer);
 
-	void update_joint_tree();
-
+	EditorNode *editor;
 	EditorInspectorPluginSkeleton *editor_plugin;
 
 	Skeleton *skeleton;
 
 	Tree *joint_tree;
-	EditorPropertyTransform *rest_editor;
+	BoneEditor *bone_editor;
+	EditorPropertyResource *skeleton_def_editor;
 
 	UndoRedo *undo_redo;
+
+	void update_joint_tree();
+	void update_editors();
+
+	void create_editors();
 
 protected:
 	void _notification(int p_what);
@@ -65,14 +118,18 @@ public:
 
 	void _joint_tree_selection_changed();
 
-	void add_controls(EditorInspectorPlugin *plugin);
+	void _update_properties();
 
-	SkeletonEditor(EditorInspectorPluginSkeleton *e_plugin, Skeleton *skeleton);
+	SkeletonEditor(EditorInspectorPluginSkeleton *e_plugin, EditorNode *p_editor, Skeleton *skeleton);
 	~SkeletonEditor();
 };
 
 class EditorInspectorPluginSkeleton : public EditorInspectorPlugin {
 	GDCLASS(EditorInspectorPluginSkeleton, EditorInspectorPlugin);
+
+	friend class SkeletonEditorPlugin;
+
+	EditorNode *editor;
 
 public:
 	virtual bool can_handle(Object *p_object);
@@ -81,6 +138,8 @@ public:
 
 class SkeletonEditorPlugin : public EditorPlugin {
 	GDCLASS(SkeletonEditorPlugin, EditorPlugin);
+
+	EditorNode *editor;
 
 public:
 	SkeletonEditorPlugin(EditorNode *p_node);

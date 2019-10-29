@@ -211,6 +211,8 @@ public:
 	virtual Size2 get_minimum_size() const;
 	virtual Control *make_custom_tooltip(const String &p_text) const;
 
+	void setup(const String& p_label, const Ref<Texture>& p_icon, const Color& p_bg_color);
+
 	String get_tooltip_text() const;
 
 	EditorInspectorCategory();

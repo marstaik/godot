@@ -167,7 +167,7 @@ void Skeleton::_get_property_list(List<PropertyInfo> *p_list) const {
 		}
 
 		p_list->push_back(PropertyInfo(Variant::BOOL, prep + "enabled", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR));
-		p_list->push_back(PropertyInfo(Variant::TRANSFORM, prep + "pose", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR));
+		p_list->push_back(PropertyInfo(Variant::TRANSFORM, prep + "pose", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR));
 		p_list->push_back(PropertyInfo(Variant::ARRAY, prep + "bound_children", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR));
 	}
 }
@@ -336,6 +336,11 @@ void Skeleton::_notification(int p_what) {
 			}
 
 			dirty = false;
+
+#ifdef TOOLS_ENABLED
+			emit_signal("pose_updated");
+#endif // TOOLS_ENABLED
+
 		} break;
 	}
 }
@@ -932,7 +937,13 @@ void Skeleton::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_skeleton_definition"), &Skeleton::get_skeleton_definition);
 	ClassDB::bind_method(D_METHOD("set_skeleton_definition", "skeleton_definition"), &Skeleton::set_skeleton_definition);
 
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "skeleton_definition", PROPERTY_HINT_RESOURCE_TYPE), "set_skeleton_definition", "get_skeleton_definition");
+	ADD_PROPERTY(
+			PropertyInfo(Variant::OBJECT, "skeleton_definition", PROPERTY_HINT_RESOURCE_TYPE, "", PROPERTY_USAGE_NOEDITOR),
+			"set_skeleton_definition", "get_skeleton_definition");
+
+#ifdef TOOLS_ENABLED
+	ADD_SIGNAL(MethodInfo("pose_updated"));
+#endif // TOOLS_ENABLED
 
 	BIND_CONSTANT(NOTIFICATION_UPDATE_SKELETON);
 }
