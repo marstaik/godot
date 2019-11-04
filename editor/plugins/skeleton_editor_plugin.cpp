@@ -38,71 +38,70 @@
 #include "scene/resources/skeleton_definition.h"
 #include "spatial_editor_plugin.h"
 
-void TransformEditor::create_editors() {
+void BoneTransformEditor::create_editors() {
 	const Color section_color = get_color("prop_subsection", "Editor");
 	const Color subsection_color = Color(section_color.r, section_color.g, section_color.b, section_color.a / 2);
 
 	EditorInspectorSection *s1 = memnew(EditorInspectorSection);
-	s1->setup("trf_properties", label, object, section_color, true);
+	s1->setup("trf_properties", label, skeleton, section_color, true);
 	add_child(s1);
 
 	Label *l1 = memnew(Label("Translation"));
 	s1->get_vbox()->add_child(l1);
 
-	GridContainer *c1 = memnew(GridContainer());
-	c1->set_columns(3);
-	s1->get_vbox()->add_child(c1);
+	translation_grid = memnew(GridContainer());
+	translation_grid->set_columns(3);
+	s1->get_vbox()->add_child(translation_grid);
 
 	Label *l2 = memnew(Label("Rotation"));
 	s1->get_vbox()->add_child(l2);
 
-	GridContainer *c2 = memnew(GridContainer());
-	c2->set_columns(3);
-	s1->get_vbox()->add_child(c2);
+	rotation_grid = memnew(GridContainer());
+	rotation_grid->set_columns(3);
+	s1->get_vbox()->add_child(rotation_grid);
 
 	Label *l3 = memnew(Label("Scale"));
 	s1->get_vbox()->add_child(l3);
 
-	GridContainer *c3 = memnew(GridContainer());
-	c3->set_columns(3);
-	s1->get_vbox()->add_child(c3);
+	scale_grid = memnew(GridContainer());
+	scale_grid->set_columns(3);
+	s1->get_vbox()->add_child(scale_grid);
 
 	Label *l4 = memnew(Label("Transform"));
 	s1->get_vbox()->add_child(l4);
 
-	GridContainer *c4 = memnew(GridContainer());
-	c4->set_columns(3);
-	s1->get_vbox()->add_child(c4);
+	transform_grid = memnew(GridContainer());
+	transform_grid->set_columns(3);
+	s1->get_vbox()->add_child(transform_grid);
 
-	static const char *desc1[3] = { "x", "y", "z" };
+	static const char *desc[12] = { "x", "y", "z", "x", "y", "z", "x", "y", "z", "x", "y", "z" };
 
 	for (int i = 0; i < 3; ++i) {
 		translation[i] = memnew(EditorSpinSlider());
-		translation[i]->set_label(desc1[i]);
-		setup_spinner(translation[i]);
-		c1->add_child(translation[i]);
+		translation[i]->set_label(desc[i]);
+		setup_spinner(translation[i], false);
+		translation_grid->add_child(translation[i]);
 
 		rotation[i] = memnew(EditorSpinSlider());
-		rotation[i]->set_label(desc1[i]);
-		setup_spinner(rotation[i]);
-		c2->add_child(rotation[i]);
+		rotation[i]->set_label(desc[i]);
+		setup_spinner(rotation[i], false);
+		rotation_grid->add_child(rotation[i]);
 
 		scale[i] = memnew(EditorSpinSlider());
-		scale[i]->set_label(desc1[i]);
-		setup_spinner(scale[i]);
-		c3->add_child(scale[i]);
+		scale[i]->set_label(desc[i]);
+		setup_spinner(scale[i], false);
+		scale_grid->add_child(scale[i]);
 	}
 
-	static const char *desc2[12] = { "x", "y", "z", "x", "y", "z", "x", "y", "z", "x", "y", "z" };
 	for (int i = 0; i < 12; ++i) {
 		transform[i] = memnew(EditorSpinSlider());
-		transform[i]->set_label(desc2[i]);
-		setup_spinner(transform[i]);
-		c4->add_child(transform[i]);
+		transform[i]->set_label(desc[i]);
+		setup_spinner(transform[i], true);
+		transform_grid->add_child(transform[i]);
 	}
 }
 
-void TransformEditor::setup_spinner(EditorSpinSlider *spinner) {
+void BoneTransformEditor::setup_spinner(EditorSpinSlider *spinner, const bool is_transform_spinner) {
 	spinner->set_flat(true);
 	spinner->set_min(-10000);
 	spinner->set_max(10000);
@@ -111,9 +110,11 @@ void TransformEditor::setup_spinner(EditorSpinSlider *spinner) {
 	spinner->set_allow_greater(true);
 	spinner->set_allow_lesser(true);
 	spinner->set_h_size_flags(SIZE_EXPAND_FILL);
+
+	spinner->connect("value_changed", this, "_value_changed", varray(is_transform_spinner));
 }
 
-void TransformEditor::_notification(int p_what) {
+void BoneTransformEditor::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
 			create_editors();
@@ -137,18 +138,97 @@ void TransformEditor::_notification(int p_what) {
 						scale[i]->set_custom_label_color(true, c);
 				}
 
-				if (transform[i] != nullptr)
+				if (transform[i] != nullptr) {
 					transform[i]->set_custom_label_color(true, c);
+				}
 			}
+			break;
+		}
+		case NOTIFICATION_SORT_CHILDREN: {
+			const Ref<Font> font = get_font("font", "Tree");
+
+			Point2 buffer;
+			buffer.x += get_constant("inspector_margin", "Editor");
+			buffer.y += font->get_height();
+			buffer.y += get_constant("vseparation", "Tree");
+
+			const float vector_height = translation_grid->get_size().y;
+			const float transform_height = transform_grid->get_size().y;
+
+			const float width = get_size().x - get_constant("inspector_margin", "Editor");
+
+			background_rects[0] = Rect2(translation_grid->get_position() + buffer, Size2(width, vector_height));
+			background_rects[1] = Rect2(rotation_grid->get_position() + buffer, Size2(width, vector_height));
+			background_rects[2] = Rect2(scale_grid->get_position() + buffer, Size2(width, vector_height));
+			background_rects[3] = Rect2(transform_grid->get_position() + buffer, Size2(width, transform_height));
+
+			update();
+			break;
+		}
+		case NOTIFICATION_DRAW: {
+			const Color dark_color = get_color("dark_color_2", "Editor");
+
+			for (int i = 0; i < 4; ++i) {
+				draw_rect(background_rects[i], dark_color);
+			}
+
+			break;
 		}
 	}
 }
 
-void TransformEditor::_update_properties() {
-	if (object == nullptr)
+void BoneTransformEditor::_value_changed(const double p_value, const bool p_from_transform) {
+	if (updating)
 		return;
 
-	Transform tform = object->get(property);
+	const Transform tform = compute_transform(p_from_transform);
+
+	undo_redo->create_action(TTR("Set Bone Transform"), UndoRedo::MERGE_ENDS);
+	undo_redo->add_undo_property(skeleton, property, skeleton->get(property));
+	undo_redo->add_do_property(skeleton, property, tform);
+	undo_redo->commit_action();
+	//skeleton->set(property, compute_transform(slider));
+
+	//_update_properties();
+}
+
+Transform BoneTransformEditor::compute_transform(const bool p_from_transform) const {
+
+	// Last modified was a raw transform column...
+	if (p_from_transform) {
+		Transform tform;
+
+		for (int i = 0; i < 9; ++i) {
+			tform.basis[i / 3][i % 3] = transform[i]->get_value();
+		}
+
+		for (int i = 0; i < 3; ++i) {
+			tform.origin[i] = transform[i + 9]->get_value();
+		}
+
+		return tform;
+	}
+
+	return Transform(
+			Basis(Vector3(rotation[0]->get_value(), rotation[1]->get_value(), rotation[2]->get_value()),
+					Vector3(scale[0]->get_value(), scale[1]->get_value(), scale[2]->get_value())),
+			Vector3(translation[0]->get_value(), translation[1]->get_value(), translation[2]->get_value()));
+}
+
+void BoneTransformEditor::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("_value_changed", "value"), &BoneTransformEditor::_value_changed);
+}
+
+void BoneTransformEditor::_update_properties() {
+	if (updating)
+		return;
+
+	if (skeleton == nullptr)
+		return;
+
+	updating = true;
+
+	Transform tform = skeleton->get(property);
 
 	Vector3 rot = tform.get_basis().get_rotation_euler();
 	Vector3 sc = tform.get_basis().get_scale();
@@ -165,49 +245,24 @@ void TransformEditor::_update_properties() {
 	for (int i = 0; i < 9; ++i) {
 		transform[i]->set_value(tform.get_basis()[i / 3][i % 3]);
 	}
+
+	updating = false;
 }
 
-TransformEditor::TransformEditor(Object *p_object) :
-		object(p_object),
+BoneTransformEditor::BoneTransformEditor(Skeleton *p_skeleton) :
+		skeleton(p_skeleton),
 		disabled(false),
+		updating(false),
 		translation(),
 		rotation(),
 		scale(),
 		transform() {
+
+	undo_redo = EditorNode::get_undo_redo();
 }
 
-void TransformEditor::set_object_and_target(Object *p_object, const String &p_prop) {
-	object = p_object;
+void BoneTransformEditor::set_target(const String &p_prop) {
 	property = p_prop;
-}
-
-BoneEditor::BoneEditor(Skeleton *p_skeleton) :
-		skeleton(p_skeleton) {
-
-	add_constant_override("separation", 0);
-
-	rest = memnew(TransformEditor(skeleton));
-	rest->set_label("Bone Rest");
-	add_child(rest);
-
-	pose = memnew(TransformEditor(skeleton));
-	pose->set_label("Bone Pose");
-	add_child(pose);
-}
-
-void BoneEditor::set_bone(const BoneId p_bone_id) {
-	bone_id = p_bone_id;
-	rest->set_object_and_target(skeleton, "bones/" + itos(p_bone_id) + "/rest");
-	pose->set_object_and_target(skeleton, "bones/" + itos(p_bone_id) + "/pose");
-}
-
-void BoneEditor::set_rest_disabled(const bool p_disabled) {
-	rest_disabled = p_disabled;
-}
-
-void BoneEditor::_update_properties() {
-	rest->_update_properties();
-	pose->_update_properties();
 }
 
 void SkeletonEditor::_joint_tree_selection_changed() {
@@ -216,16 +271,20 @@ void SkeletonEditor::_joint_tree_selection_changed() {
 
 	if (path.begins_with("bones/")) {
 		const int b_idx = path.get_slicec('/', 1).to_int();
-		const String bone_name = skeleton->get_bone_name(b_idx);
+		const String bone_path = "bones/" + itos(b_idx) + "/";
 
-		bone_editor->set_bone(b_idx);
+		pose_editor->set_target(bone_path + "pose");
+		rest_editor->set_target(bone_path + "rest");
 	}
 
 	_update_properties();
 }
 
 void SkeletonEditor::_update_properties() {
-	bone_editor->_update_properties();
+	if (rest_editor)
+		rest_editor->_update_properties();
+	if (pose_editor)
+		pose_editor->_update_properties();
 }
 
 void SkeletonEditor::update_joint_tree() {
@@ -307,8 +366,13 @@ void SkeletonEditor::create_editors() {
 	joint_tree->set_allow_rmb_select(true);
 	joint_tree->connect("item_selected", this, "_joint_tree_selection_changed");
 
-	bone_editor = memnew(BoneEditor(skeleton));
-	add_child(bone_editor);
+	pose_editor = memnew(BoneTransformEditor(skeleton));
+	pose_editor->set_label("Bone Pose");
+	add_child(pose_editor);
+
+	rest_editor = memnew(BoneTransformEditor(skeleton));
+	rest_editor->set_label("Bone Rest");
+	add_child(rest_editor);
 
 #ifdef TOOLS_ENABLED
 	skeleton->connect("pose_updated", this, "_update_properties");

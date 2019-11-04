@@ -38,52 +38,48 @@
 class SkeletonEditorPlugin;
 class EditorInspectorPluginSkeleton;
 
-class TransformEditor : public VBoxContainer {
-	GDCLASS(TransformEditor, VBoxContainer);
+class BoneTransformEditor : public VBoxContainer {
+	GDCLASS(BoneTransformEditor, VBoxContainer);
+
+	GridContainer *translation_grid;
+	GridContainer *rotation_grid;
+	GridContainer *scale_grid;
+	GridContainer *transform_grid;
 
 	EditorSpinSlider *translation[3];
 	EditorSpinSlider *rotation[3];
 	EditorSpinSlider *scale[3];
-
 	EditorSpinSlider *transform[12];
 
-	Object *object;
+	Rect2 background_rects[4];
+
+	Skeleton *skeleton;
 	String property;
+
+	UndoRedo *undo_redo;
+
 	bool disabled;
+	bool updating;
+
 	String label;
 
 	void create_editors();
-	void setup_spinner(EditorSpinSlider *spinner);
+	void setup_spinner(EditorSpinSlider *spinner, const bool is_transform_spinner);
+
+	void _value_changed(const double p_value, const bool p_from_transform);
+
+	Transform compute_transform(const bool p_from_transform) const;
 
 protected:
 	void _notification(int p_what);
+	static void _bind_methods();
 
 public:
-	TransformEditor(Object *p_object);
+	BoneTransformEditor(Skeleton *p_skeleton);
 
-	void set_object_and_target(Object *p_object, const String &p_prop);
+	void set_target(const String &p_prop);
 	void _update_properties();
 	void set_label(const String &p_label) { label = p_label; }
-};
-
-class BoneEditor : public VBoxContainer {
-	GDCLASS(BoneEditor, VBoxContainer);
-
-	Skeleton *skeleton;
-	BoneId bone_id;
-
-	TransformEditor *rest;
-	TransformEditor *pose;
-
-	bool rest_disabled;
-
-public:
-	BoneEditor(Skeleton *p_skeleton);
-
-	void set_bone(const BoneId p_bone_id);
-
-	void set_rest_disabled(const bool p_disabled);
-	void _update_properties();
 };
 
 class SkeletonEditor : public VBoxContainer {
@@ -96,7 +92,8 @@ class SkeletonEditor : public VBoxContainer {
 	Skeleton *skeleton;
 
 	Tree *joint_tree;
-	BoneEditor *bone_editor;
+	BoneTransformEditor *rest_editor;
+	BoneTransformEditor *pose_editor;
 	EditorPropertyResource *skeleton_def_editor;
 
 	UndoRedo *undo_redo;
@@ -113,8 +110,6 @@ protected:
 
 public:
 	Skeleton *get_skeleton() const { return skeleton; };
-
-	void set_undo_redo(UndoRedo *p_undo_redo) { undo_redo = p_undo_redo; }
 
 	void _joint_tree_selection_changed();
 
