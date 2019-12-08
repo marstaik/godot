@@ -157,6 +157,7 @@
 #include "scene/resources/rectangle_shape_2d.h"
 #include "scene/resources/resource_format_text.h"
 #include "scene/resources/segment_shape_2d.h"
+#include "scene/resources/skeleton_definition.h"
 #include "scene/resources/sky.h"
 #include "scene/resources/sphere_shape.h"
 #include "scene/resources/surface_tool.h"
@@ -370,6 +371,7 @@ void register_scene_types() {
 
 	ClassDB::register_class<Spatial>();
 	ClassDB::register_virtual_class<SpatialGizmo>();
+	ClassDB::register_class<SkeletonDefinition>();
 	ClassDB::register_class<Skeleton>();
 	ClassDB::register_class<AnimationPlayer>();
 	ClassDB::register_class<Tween>();
@@ -672,6 +674,7 @@ void register_scene_types() {
 	ClassDB::register_virtual_class<Font>();
 	ClassDB::register_class<BitmapFont>();
 	ClassDB::register_class<Curve>();
+	ClassDB::register_class<SkeletonDefinition>();
 
 	ClassDB::register_class<TextFile>();
 
