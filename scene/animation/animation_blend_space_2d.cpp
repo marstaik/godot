@@ -234,6 +234,8 @@ void AnimationNodeBlendSpace2D::set_min_space(const Vector2 &p_min) {
 	if (min_space.y >= max_space.y) {
 		min_space.y = max_space.y - 1;
 	}
+
+	clamp_points(min_space, max_space);
 }
 Vector2 AnimationNodeBlendSpace2D::get_min_space() const {
 	return min_space;
@@ -248,7 +250,10 @@ void AnimationNodeBlendSpace2D::set_max_space(const Vector2 &p_max) {
 	if (max_space.y <= min_space.y) {
 		max_space.y = min_space.y + 1;
 	}
+
+	clamp_points(min_space, max_space);
 }
+
 Vector2 AnimationNodeBlendSpace2D::get_max_space() const {
 	return max_space;
 }
@@ -582,6 +587,16 @@ AnimationNodeBlendSpace2D::TriangleWeights AnimationNodeBlendSpace2D::get_triang
 	}
 
 	return t_weights;
+}
+
+void AnimationNodeBlendSpace2D::clamp_points(const Vector2 &min_space, const Vector2 &max_space) {
+	for (int i = 0; i < blend_points_used; ++i) {
+		BlendPoint &blend_point = blend_points[i];
+		blend_point.position.x = CLAMP(blend_point.position.x, min_space.x, max_space.x);
+		blend_point.position.y = CLAMP(blend_point.position.y, min_space.y, max_space.y);
+	}
+
+	_update_triangles();
 }
 
 void AnimationNodeBlendSpace2D::set_blend_mode(BlendMode p_blend_mode) {

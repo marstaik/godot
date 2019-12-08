@@ -95,6 +95,8 @@ protected:
 
 	TriangleWeights get_triangle_blends(const Vector2 &p_blend_pos);
 
+	void clamp_points(const Vector2 &min_space, const Vector2 &max_space);
+
 protected:
 	virtual void _validate_property(PropertyInfo &property) const;
 	static void _bind_methods();
