@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  stats.cpp                                                            */
+/*  saveable.h                                                           */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           KENOS Project                               */
@@ -14,4 +14,11 @@
  * @author Marios Staikopoulos
  */
 
-#include "stats.h"
+#include "core/object.h"
+
+class Saveable : public Object {
+	GDCLASS(Saveable, Object);
+
+public:
+	Saveable();
+};

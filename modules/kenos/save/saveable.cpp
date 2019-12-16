@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  stats.cpp                                                            */
+/*  saveable.cpp                                                         */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           KENOS Project                               */
@@ -14,4 +14,7 @@
  * @author Marios Staikopoulos
  */
 
-#include "stats.h"
+#include "saveable.h"
+
+Saveable::Saveable() {
+}

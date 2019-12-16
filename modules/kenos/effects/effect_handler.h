@@ -1,4 +1,18 @@
-/* effect_handler.h */
+/*************************************************************************/
+/*  effect_handler.h                                                     */
+/*************************************************************************/
+/*                       This file is part of:                           */
+/*                           KENOS Project                               */
+/*                      https://cosmicblimp.com                          */
+/*************************************************************************/
+/* Copyright (c) 2019-2020 Marios Staikopoulos, CosmicBlimp.             */
+/*                                                                       */
+/* Not allowed for public use. Do not distribute.                        */
+/*************************************************************************/
+
+/*
+ * @author Marios Staikopoulos
+ */
 
 #ifndef EFFECT_HANDLER_H
 #define EFFECT_HANDLER_H
@@ -37,7 +51,7 @@ public:
 
 	virtual Stats *get_stats() { return nullptr; }
 
-	void _effect_end(Effect *p_effect);
+	void _effect_end(Object *p_effect);
 };
 
 #endif // EFFECT_HANDLER

@@ -1,4 +1,18 @@
-/* effect_handler.cpp */
+/*************************************************************************/
+/*  effect_handler.cpp                                                   */
+/*************************************************************************/
+/*                       This file is part of:                           */
+/*                           KENOS Project                               */
+/*                      https://cosmicblimp.com                          */
+/*************************************************************************/
+/* Copyright (c) 2019-2020 Marios Staikopoulos, CosmicBlimp.             */
+/*                                                                       */
+/* Not allowed for public use. Do not distribute.                        */
+/*************************************************************************/
+
+/*
+ * @author Marios Staikopoulos
+ */
 
 #include "effect_handler.h"
 
@@ -90,8 +104,10 @@ void EffectHandler::set_effect(Effect *p_effect, const int p_index) {
 	add_effect(p_effect, p_index);
 }
 
-void EffectHandler::_effect_end(Effect *p_effect) {
-	int find = effects.find(p_effect);
+void EffectHandler::_effect_end(Object *p_effect) {
+	Effect *effect = Object::cast_to<Effect>(p_effect);
+
+	int find = effects.find(effect);
 	ERR_FAIL_COND(find == -1);
 
 	remove_effect(find);
