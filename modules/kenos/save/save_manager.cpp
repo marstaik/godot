@@ -10,11 +10,11 @@
 /* Not allowed for public use. Do not distribute.                        */
 /*************************************************************************/
 
+#include "save_manager.h"
+
 /*
  * @author Marios Staikopoulos
  */
-
-#include "save_manager.h"
 
 SaveManager::SaveManager() {
 }

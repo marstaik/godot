@@ -10,11 +10,14 @@
 /* Not allowed for public use. Do not distribute.                        */
 /*************************************************************************/
 
+#ifndef SAVE_MANAGER_H
+#define SAVE_MANAGER_H
+
+#include "core/object.h"
+
 /*
  * @author Marios Staikopoulos
  */
-
-#include "core/object.h"
 
 class SaveManager : public Object {
 	GDCLASS(SaveManager, Object);
@@ -22,3 +25,5 @@ class SaveManager : public Object {
 public:
 	SaveManager();
 };
+
+#endif // SAVE_MANAGER_H

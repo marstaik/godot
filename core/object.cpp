@@ -1982,6 +1982,30 @@ Object::~Object() {
 	}
 }
 
+/* KENOS CORE MODIFICATION START */
+void Object::get_property_save_list(List<PropertyInfo> *p_list, bool p_reversed) const {
+	if (script_instance && p_reversed) {
+#ifdef TOOLS_ENABLED
+		//p_list->push_back(PropertyInfo(Variant::NIL, "Script Variables", PROPERTY_HINT_NONE, String(), PROPERTY_USAGE_CATEGORY));
+#endif
+		//object->get_script_instance()->get_property_list(p_list);
+	}
+
+	_get_property_save_listv(p_list, p_reversed);
+
+	if (script_instance && !p_reversed) {
+#ifdef TOOLS_ENABLED
+		p_list->push_back(PropertyInfo(Variant::NIL, "Script Variables", PROPERTY_HINT_NONE, String(), PROPERTY_USAGE_CATEGORY));
+#endif
+		//object->get_script_instance()->get_property_save_list(p_list);
+	}
+}
+
+void Object::_get_property_save_list(List<PropertyInfo> *p_list) const {
+	p_list->push_back(PropertyInfo(Variant::NIL, "Dummy", PROPERTY_HINT_NONE, String(), PROPERTY_USAGE_CATEGORY));
+}
+/* KENOS CORE MODIFICATION END */
+
 bool predelete_handler(Object *p_object) {
 
 	return p_object->_predelete();

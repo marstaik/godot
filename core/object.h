@@ -257,6 +257,26 @@ public:                                                             \
 private:
 
 #define GDCLASS(m_class, m_inherits)                                                                                                    \
+                                                                                                                                        \
+	/* KENOS CORE MODIFICATION START */                                                                                                 \
+protected:                                                                                                                              \
+	_FORCE_INLINE_ void (Object::*_get_get_property_save_list() const)(List<PropertyInfo> * p_list) const {                             \
+		return (void (Object::*)(List<PropertyInfo> *) const) & m_class::_get_property_save_list;                                       \
+	}                                                                                                                                   \
+                                                                                                                                        \
+	virtual void _get_property_save_listv(List<PropertyInfo> *p_list, bool p_reversed) const {                                          \
+		if (!p_reversed) {                                                                                                              \
+			m_inherits::_get_property_save_listv(p_list, p_reversed);                                                                   \
+		}                                                                                                                               \
+		if (m_class::_get_get_property_save_list() != m_inherits::_get_get_property_save_list()) {                                      \
+			_get_property_save_list(p_list);                                                                                            \
+		}                                                                                                                               \
+		if (p_reversed) {                                                                                                               \
+			m_inherits::_get_property_save_listv(p_list, p_reversed);                                                                   \
+		}                                                                                                                               \
+	}                                                                                                                                   \
+	/* KENOS CORE MODIFICATION END */                                                                                                   \
+                                                                                                                                        \
 private:                                                                                                                                \
 	void operator=(const m_class &p_rval) {}                                                                                            \
 	mutable StringName _class_name;                                                                                                     \
@@ -752,6 +772,23 @@ public:
 
 	Object();
 	virtual ~Object();
+
+	/* KENOS CORE MODIFICATION START */
+protected:
+	const bool _saveable = false;
+
+	virtual void _get_property_save_listv(List<PropertyInfo> *p_list, bool p_reversed) const {};
+
+	void _get_property_save_list(List<PropertyInfo> *p_list) const;
+
+	_FORCE_INLINE_ void (Object::*_get_get_property_save_list() const)(List<PropertyInfo> *p_list) const {
+		return &Object::_get_property_save_list;
+	}
+
+public:
+	void get_property_save_list(List<PropertyInfo> *p_list, bool p_reversed = false) const;
+
+	/* KENOS CORE MODIFICATION END */
 };
 
 bool predelete_handler(Object *p_object);
