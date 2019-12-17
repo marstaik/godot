@@ -35,3 +35,6 @@ void Pawn::print_properties() const {
 		print_line(list[i].name.c_str());
 	}
 }
+
+Pawn::Pawn() {
+}

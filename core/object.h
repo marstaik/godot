@@ -775,7 +775,7 @@ public:
 
 	/* KENOS CORE MODIFICATION START */
 protected:
-	const bool _saveable = false;
+	virtual bool _is_saveable() const { return false; }
 
 	virtual void _get_property_save_listv(List<PropertyInfo> *p_list, bool p_reversed) const {};
 
