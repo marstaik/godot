@@ -31,7 +31,6 @@
 #ifndef I_MONO_CLASS_MEMBER_H
 #define I_MONO_CLASS_MEMBER_H
 
-#include "core/string_name.h"
 #include "gd_mono_header.h"
 
 #include <mono/metadata/object.h>
