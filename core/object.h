@@ -31,6 +31,7 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
+#include "core/guid.h"
 #include "core/hash_map.h"
 #include "core/list.h"
 #include "core/map.h"
@@ -488,6 +489,10 @@ private:
 		int lock;
 		Signal() { lock = 0; }
 	};
+
+	/* KENOS CORE MODIFICATION START */
+	Guid guid;
+	/* KENOS CORE MODIFICATION END */
 
 	HashMap<StringName, Signal> signal_map;
 	List<Connection> connections;

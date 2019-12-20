@@ -47,6 +47,7 @@ bool EffectHandler::_set(const StringName &p_path, const Variant &p_value) {
 	ERR_FAIL_INDEX_V(which, effects.size(), false);
 
 	set_effect(Object::cast_to<Effect>(p_value), which);
+	return true;
 }
 
 void EffectHandler::_get_property_list(List<PropertyInfo> *p_list) const {
