@@ -49,6 +49,10 @@
 #include "core/rid.h"
 #include "core/ustring.h"
 
+/* KENOS CORE MODIFICATION START */
+#include "core/guid.h"
+/* KENOS CORE MODIFICATION END */
+
 class RefPtr;
 class Object;
 class Node; // helper
@@ -114,6 +118,10 @@ public:
 		POOL_VECTOR3_ARRAY, // 25
 		POOL_COLOR_ARRAY,
 
+		/* KENOS CORE MODIFICATION - START */
+		GUID,
+		/* KENOS CORE MODIFICATION - END */
+
 		VARIANT_MAX
 
 	};
@@ -144,6 +152,9 @@ private:
 		Transform *_transform;
 		void *_ptr; //generic pointer
 		uint8_t _mem[sizeof(ObjData) > (sizeof(real_t) * 4) ? sizeof(ObjData) : (sizeof(real_t) * 4)];
+		/* KENOS CORE MODIFICATION START */
+		Guid *_guid;
+		/* KENOS CORE MODIFICATION END */
 	} _data GCC_ALIGNED_8;
 
 	void reference(const Variant &p_variant);
@@ -191,6 +202,10 @@ public:
 	operator Basis() const;
 	operator Transform() const;
 	operator Transform2D() const;
+
+	/* KENOS CORE MODIFICATION START */
+	operator Guid() const;
+	/* KENOS CORE MODIFICATION END */
 
 	operator Color() const;
 	operator NodePath() const;
@@ -261,6 +276,9 @@ public:
 	Variant(const Basis &p_matrix);
 	Variant(const Transform2D &p_transform);
 	Variant(const Transform &p_transform);
+	/* KENOS CORE MODIFICATION START */
+	Variant(const Guid &p_guid);
+	/* KENOS CORE MODIFICATION END */
 	Variant(const Color &p_color);
 	Variant(const NodePath &p_node_path);
 	Variant(const RefPtr &p_resource);

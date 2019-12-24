@@ -1805,6 +1805,9 @@ void GDScriptLanguage::get_reserved_words(List<String> *p_words) const {
 		// var
 		"const",
 		"enum",
+		/* KENOS CORE MODIFICATION START */
+		"save",
+		/* KENOS CORE MODIFICATION END */
 		"export",
 		"onready",
 		"static",

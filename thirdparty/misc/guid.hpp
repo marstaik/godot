@@ -24,6 +24,18 @@ THE SOFTWARE.
 
 #pragma once
 
+#ifdef WINDOWS_ENABLED
+#define GUID_WINDOWS
+#endif
+
+#ifdef UNIX_ENABLED
+#define GUID_LIBUUID
+#endif
+
+#ifdef ANDROID_ENABLED
+#define GUID_ANDROID
+#endif
+
 #ifdef GUID_ANDROID
 #include <jni.h>
 #include <thread>
@@ -51,8 +63,8 @@ BEGIN_XG_NAMESPACE
 // string via constructor.
 class Guid {
 public:
-	explicit Guid(const std::array<unsigned char, 16> &bytes);
-	explicit Guid(std::array<unsigned char, 16> &&bytes);
+	explicit Guid(const std::array<uint8_t, 16> &bytes);
+	explicit Guid(std::array<uint8_t, 16> &&bytes);
 
 #ifdef XG_STRING_VIEW
 	explicit Guid(std::string_view fromString);
@@ -69,7 +81,8 @@ public:
 
 	std::string str() const;
 	operator std::string() const;
-	const std::array<unsigned char, 16> &bytes() const;
+	const std::array<uint8_t, 16> &bytes() const;
+	std::array<uint8_t, 16> &bytes() { return _bytes; };
 	void swap(Guid &other);
 	bool isValid() const;
 
@@ -77,7 +90,7 @@ private:
 	void zeroify();
 
 	// actual data
-	std::array<unsigned char, 16> _bytes;
+	std::array<uint8_t, 16> _bytes;
 
 	// make the << operator a friend so it can access _bytes
 	friend std::ostream &operator<<(std::ostream &s, const Guid &guid);

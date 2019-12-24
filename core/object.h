@@ -31,7 +31,10 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
+/* KENOS CORE MODIFICATION START */
 #include "core/guid.h"
+/* KENOS CORE MODIFICATION END */
+
 #include "core/hash_map.h"
 #include "core/list.h"
 #include "core/map.h"
@@ -124,6 +127,10 @@ enum PropertyUsageFlags {
 	PROPERTY_USAGE_NODE_PATH_FROM_SCENE_ROOT = 1 << 23,
 	PROPERTY_USAGE_RESOURCE_NOT_PERSISTENT = 1 << 24,
 	PROPERTY_USAGE_KEYING_INCREMENTS = 1 << 25, // Used in inspector to increment property when keyed in animation player
+
+	/* KENOS CORE MODIFICAITON START */
+	PROPERTY_USAGE_SAVE = 1 << 26, // Used to mark an export as being saveable
+	/* KENOS CORE MODIFICAITON END */
 
 	PROPERTY_USAGE_DEFAULT = PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_NETWORK,
 	PROPERTY_USAGE_DEFAULT_INTL = PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_NETWORK | PROPERTY_USAGE_INTERNATIONALIZED,
@@ -258,26 +265,6 @@ public:                                                             \
 private:
 
 #define GDCLASS(m_class, m_inherits)                                                                                                    \
-                                                                                                                                        \
-	/* KENOS CORE MODIFICATION START */                                                                                                 \
-protected:                                                                                                                              \
-	_FORCE_INLINE_ void (Object::*_get_get_property_save_list() const)(List<PropertyInfo> * p_list) const {                             \
-		return (void (Object::*)(List<PropertyInfo> *) const) & m_class::_get_property_save_list;                                       \
-	}                                                                                                                                   \
-                                                                                                                                        \
-	virtual void _get_property_save_listv(List<PropertyInfo> *p_list, bool p_reversed) const {                                          \
-		if (!p_reversed) {                                                                                                              \
-			m_inherits::_get_property_save_listv(p_list, p_reversed);                                                                   \
-		}                                                                                                                               \
-		if (m_class::_get_get_property_save_list() != m_inherits::_get_get_property_save_list()) {                                      \
-			_get_property_save_list(p_list);                                                                                            \
-		}                                                                                                                               \
-		if (p_reversed) {                                                                                                               \
-			m_inherits::_get_property_save_listv(p_list, p_reversed);                                                                   \
-		}                                                                                                                               \
-	}                                                                                                                                   \
-	/* KENOS CORE MODIFICATION END */                                                                                                   \
-                                                                                                                                        \
 private:                                                                                                                                \
 	void operator=(const m_class &p_rval) {}                                                                                            \
 	mutable StringName _class_name;                                                                                                     \
@@ -779,20 +766,11 @@ public:
 	virtual ~Object();
 
 	/* KENOS CORE MODIFICATION START */
-protected:
-	virtual bool _is_saveable() const { return false; }
-
-	virtual void _get_property_save_listv(List<PropertyInfo> *p_list, bool p_reversed) const {};
-
-	void _get_property_save_list(List<PropertyInfo> *p_list) const;
-
-	_FORCE_INLINE_ void (Object::*_get_get_property_save_list() const)(List<PropertyInfo> *p_list) const {
-		return &Object::_get_property_save_list;
-	}
-
 public:
-	void get_property_save_list(List<PropertyInfo> *p_list, bool p_reversed = false) const;
+	const Guid &get_guid() const { return guid; }
+	void set_guid(const Guid &p_guid) { guid = p_guid; }
 
+	void get_property_save_list(List<PropertyInfo> *p_list, bool p_reversed = false) const;
 	/* KENOS CORE MODIFICATION END */
 };
 
