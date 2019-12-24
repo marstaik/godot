@@ -635,7 +635,31 @@ Error VariantParser::parse_value(Token &token, Variant &value, Stream *p_stream,
 			value = Transform(Basis(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]), Vector3(args[9], args[10], args[11]));
 			return OK;
 
-		} else if (id == "Color") {
+		}
+		/* KENOS CORE MODIFICATION START */
+		else if (id == "Guid") {
+			get_token(p_stream, token, line, r_err_str);
+			if (token.type != TK_PARENTHESIS_OPEN) {
+				r_err_str = "Expected '('";
+				return ERR_PARSE_ERROR;
+			}
+
+			get_token(p_stream, token, line, r_err_str);
+			if (token.type != TK_STRING) {
+				r_err_str = "Expected string as argument for Guid()";
+				return ERR_PARSE_ERROR;
+			}
+
+			value = Guid(String(token.value));
+
+			get_token(p_stream, token, line, r_err_str);
+			if (token.type != TK_PARENTHESIS_CLOSE) {
+				r_err_str = "Expected ')'";
+				return ERR_PARSE_ERROR;
+			}
+		}
+		/* KENOS CORE MODIFICIATION END */
+		else if (id == "Color") {
 
 			Vector<float> args;
 			Error err = _parse_construct<float>(p_stream, args, line, r_err_str);
@@ -1684,6 +1708,14 @@ Error VariantWriter::write(const Variant &p_variant, StoreStringFunc p_store_str
 
 			p_store_string_func(p_store_string_ud, s + " )");
 		} break;
+
+		/* KENOS CORE MODIFICATION START */
+		case Variant::GUID: {
+			Guid g = p_variant;
+			String str = "Guid(\"" + String(p_variant).c_escape() + "\")";
+			p_store_string_func(p_store_string_ud, str);
+		} break;
+		/* KENOS CORE MODIFICATION END */
 
 		// misc types
 		case Variant::COLOR: {

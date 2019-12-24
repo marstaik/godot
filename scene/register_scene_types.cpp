@@ -67,6 +67,8 @@
 #include "scene/2d/y_sort.h"
 #include "scene/animation/animation_blend_space_1d.h"
 #include "scene/animation/animation_blend_space_2d.h"
+#include "scene/animation/animation_blend_space_cyclic_1d.h"
+#include "scene/animation/animation_blend_space_cyclic_2d.h"
 #include "scene/animation/animation_blend_tree.h"
 #include "scene/animation/animation_node_state_machine.h"
 #include "scene/animation/animation_player.h"
@@ -155,6 +157,7 @@
 #include "scene/resources/rectangle_shape_2d.h"
 #include "scene/resources/resource_format_text.h"
 #include "scene/resources/segment_shape_2d.h"
+#include "scene/resources/skeleton_definition.h"
 #include "scene/resources/sky.h"
 #include "scene/resources/sphere_shape.h"
 #include "scene/resources/surface_tool.h"
@@ -368,6 +371,7 @@ void register_scene_types() {
 
 	ClassDB::register_class<Spatial>();
 	ClassDB::register_virtual_class<SpatialGizmo>();
+	ClassDB::register_class<SkeletonDefinition>();
 	ClassDB::register_class<Skeleton>();
 	ClassDB::register_class<AnimationPlayer>();
 	ClassDB::register_class<Tween>();
@@ -416,6 +420,8 @@ void register_scene_types() {
 	ClassDB::register_class<AnimationNodeBlendTree>();
 	ClassDB::register_class<AnimationNodeBlendSpace1D>();
 	ClassDB::register_class<AnimationNodeBlendSpace2D>();
+	ClassDB::register_class<AnimationNodeBlendSpaceCyclic1D>();
+	ClassDB::register_class<AnimationNodeBlendSpaceCyclic2D>();
 	ClassDB::register_class<AnimationNodeStateMachine>();
 	ClassDB::register_class<AnimationNodeStateMachinePlayback>();
 
@@ -668,6 +674,7 @@ void register_scene_types() {
 	ClassDB::register_virtual_class<Font>();
 	ClassDB::register_class<BitmapFont>();
 	ClassDB::register_class<Curve>();
+	ClassDB::register_class<SkeletonDefinition>();
 
 	ClassDB::register_class<TextFile>();
 

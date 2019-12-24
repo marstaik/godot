@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  animation_blend_space_1d.h                                           */
+/*  skeleton_definition.h                                                */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,87 +28,63 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#ifndef ANIMATION_BLEND_SPACE_1D_H
-#define ANIMATION_BLEND_SPACE_1D_H
+#ifndef SKELETON_DEFINITION_H
+#define SKELETON_DEFINITION_H
 
-#include "scene/animation/animation_tree.h"
+#include "core/resource.h"
 
-class AnimationNodeBlendSpace1D : public AnimationRootNode {
-	GDCLASS(AnimationNodeBlendSpace1D, AnimationRootNode);
+/**
+	@author Marios Staikopoulos <marios@staik.net>
+*/
 
-protected:
-	enum {
-		MAX_BLEND_POINTS = 64
-	};
+#ifndef BONE_ID_DEF
+#define BONE_ID_DEF
+typedef int BoneId;
+#endif // BONE_ID_DEF
 
-	struct BlendPoint {
-		StringName name;
-		Ref<AnimationRootNode> node;
-		float position;
-	};
+class Skeleton;
 
-	BlendPoint blend_points[MAX_BLEND_POINTS];
-	int blend_points_used;
-
-	float max_space;
-	float min_space;
-
-	float snap;
-
-	String value_label;
-
-	void _add_blend_point(int p_index, const Ref<AnimationRootNode> &p_node);
-
-	void _tree_changed();
-
-	StringName blend_position;
-
-	struct BlendWeights {
-		int points[2] = { -1, -1 };
-		float weights[2] = { 0 };
-	};
-
-	BlendWeights get_blend_values(const float p_blend_pos) const;
-
-protected:
-	virtual void _validate_property(PropertyInfo &property) const;
-	static void _bind_methods();
+class SkeletonDefinition : public Resource {
+	GDCLASS(SkeletonDefinition, Resource);
+	RES_BASE_EXTENSION("skel");
 
 public:
-	virtual void get_parameter_list(List<PropertyInfo> *r_list) const;
-	virtual Variant get_parameter_default_value(const StringName &p_parameter) const;
+private:
+	struct Bone {
+		String name;
+		BoneId parent;
+		Transform rest;
 
-	virtual void get_child_nodes(List<ChildNode> *r_child_nodes);
+		Bone() :
+				parent(-1) {
+		}
+	};
 
-	virtual void add_blend_point(const Ref<AnimationRootNode> &p_node, float p_position, int p_at_index = -1);
-	virtual void set_blend_point_node(int p_point, const Ref<AnimationRootNode> &p_node);
+	Vector<Bone> bones;
 
-	void set_blend_point_position(int p_point, float p_position);
+protected:
+	bool _get(const StringName &p_path, Variant &r_ret) const;
+	bool _set(const StringName &p_path, const Variant &p_value);
+	void _get_property_list(List<PropertyInfo> *p_list) const;
 
-	float get_blend_point_position(int p_point) const;
-	Ref<AnimationRootNode> get_blend_point_node(int p_point) const;
-	void remove_blend_point(int p_point);
-	int get_blend_point_count() const;
+public:
+	void add_bone(const String &p_name);
+	BoneId find_bone(const String &p_name) const;
+	String get_bone_name(const BoneId p_bone) const;
 
-	void set_min_space(float p_min);
-	float get_min_space() const;
+	bool is_bone_parent_of(const BoneId p_bone_id, const BoneId p_parent_bone_id) const;
 
-	void set_max_space(float p_max);
-	float get_max_space() const;
+	void set_bone_parent(const BoneId p_bone, const BoneId p_parent);
+	BoneId get_bone_parent(const BoneId p_bone) const;
 
-	void set_snap(float p_snap);
-	float get_snap() const;
+	int get_bone_count() const;
 
-	void set_value_label(const String &p_label);
-	String get_value_label() const;
+	void set_bone_rest(const BoneId p_bone, const Transform &p_rest);
+	Transform get_bone_rest(const BoneId p_bone) const;
 
-	virtual float process(float p_time, bool p_seek);
-	virtual String get_caption() const;
+	void clear_bones();
 
-	Ref<AnimationNode> get_child_by_name(const StringName &p_name);
-
-	AnimationNodeBlendSpace1D();
-	~AnimationNodeBlendSpace1D();
+	static Ref<SkeletonDefinition> create_from_skeleton(const Skeleton *skeleton);
 };
 
-#endif // ANIMATION_BLEND_SPACE_1D_H
+#endif

@@ -987,6 +987,13 @@ void Variant::reference(const Variant &p_variant) {
 			_data._transform = memnew(Transform(*p_variant._data._transform));
 		} break;
 
+		/* KENOS CORE MODIFICATION START */
+		case GUID: {
+
+			_data._guid = memnew(Guid(*p_variant._data._guid));
+		} break;
+		/* KENOS CORE MODIFICATION END */
+
 		// misc types
 		case COLOR: {
 
@@ -1106,6 +1113,13 @@ void Variant::clear() {
 
 			memdelete(_data._transform);
 		} break;
+
+		/* KENOS CORE MODIFICATION START */
+		case GUID: {
+
+			memdelete(_data._guid);
+		} break;
+		/* KENOS CORE MODIFICATION END */
 
 		// misc types
 		case NODE_PATH: {
@@ -1423,6 +1437,9 @@ String Variant::stringify(List<const void *> &stack) const {
 			Transform2D mat32 = operator Transform2D();
 			return "(" + Variant(mat32.elements[0]).operator String() + ", " + Variant(mat32.elements[1]).operator String() + ", " + Variant(mat32.elements[2]).operator String() + ")";
 		} break;
+		/* KENOS CORE MODIFICATION START */
+		case GUID: return _data._guid->operator String();
+		/* KENOS CORE MODIFICATION END */
 		case VECTOR3: return "(" + operator Vector3() + ")";
 		case PLANE:
 			return operator Plane();
@@ -1708,6 +1725,16 @@ Variant::operator Transform2D() const {
 	} else
 		return Transform2D();
 }
+
+/* KENOS CORE MODIFICATION START */
+Variant::operator Guid() const {
+	if (type == GUID) {
+		return *_data._guid;
+	} else {
+		return Guid();
+	}
+}
+/* KENOS CORE MODIFICATION END */
 
 Variant::operator Color() const {
 
@@ -2264,6 +2291,14 @@ Variant::Variant(const Transform2D &p_transform) {
 	type = TRANSFORM2D;
 	_data._transform2d = memnew(Transform2D(p_transform));
 }
+
+/* KENOS CORE MODIFICATION START */
+Variant::Variant(const Guid &p_guid) {
+	type = GUID;
+	_data._guid = memnew(Guid(p_guid));
+}
+/* KENOS CORE MODIFICATION END */
+
 Variant::Variant(const Color &p_color) {
 
 	type = COLOR;
@@ -2595,6 +2630,12 @@ void Variant::operator=(const Variant &p_variant) {
 
 			*_data._transform = *(p_variant._data._transform);
 		} break;
+
+		/* KENOS CORE MODIFICATION START */
+		case GUID: {
+			*_data._guid = *(p_variant._data._guid);
+		} break;
+		/* KENOS CORE MODIFICATION END */
 
 		// misc types
 		case COLOR: {

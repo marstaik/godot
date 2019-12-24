@@ -4039,6 +4039,20 @@ void GDScriptParser::_parse_class(ClassNode *p_class) {
 					return;
 				}
 			} break;
+			/* KENOS CORE MODIFICATION START */
+			case GDScriptTokenizer::TK_PR_SAVE: {
+
+				tokenizer->advance();
+
+				if (tokenizer->get_token() != GDScriptTokenizer::TK_PR_EXPORT) {
+					_set_error("Expected export of variable following \"save\".");
+					return;
+				}
+
+				current_export.usage |= PROPERTY_USAGE_SCRIPT_VARIABLE;
+			}
+			// fallthrough
+			/* KENOS CORE MODIFICATION END */
 			case GDScriptTokenizer::TK_PR_EXPORT: {
 
 				tokenizer->advance();
@@ -4712,6 +4726,10 @@ void GDScriptParser::_parse_class(ClassNode *p_class) {
 
 				ClassNode::Member member;
 
+				/* KENOS CORE MODIFICATION START */
+				bool autosave = tokenizer->get_token(-2) == GDScriptTokenizer::TK_PR_SAVE;
+				/* KENOS CORE MODIFICATION END */
+
 				bool autoexport = tokenizer->get_token(-1) == GDScriptTokenizer::TK_PR_EXPORT;
 				if (current_export.type != Variant::NIL) {
 					member._export = current_export;
@@ -4836,6 +4854,13 @@ void GDScriptParser::_parse_class(ClassNode *p_class) {
 						}
 						member._export.type = cn->value.get_type();
 						member._export.usage |= PROPERTY_USAGE_SCRIPT_VARIABLE;
+
+						/* KENOS CORE MODIFICATION START */
+						if (autosave) {
+							member._export.usage |= PROPERTY_USAGE_SAVE;
+						}
+						/* KENOS CORE MODIFICATION END */
+
 						if (cn->value.get_type() == Variant::OBJECT) {
 							Object *obj = cn->value;
 							Resource *res = Object::cast_to<Resource>(obj);
@@ -4930,6 +4955,13 @@ void GDScriptParser::_parse_class(ClassNode *p_class) {
 							member._export.type = Variant::OBJECT;
 							member._export.hint = PROPERTY_HINT_RESOURCE_TYPE;
 							member._export.usage |= PROPERTY_USAGE_SCRIPT_VARIABLE;
+
+							/* KENOS CORE MODIFICATION START */
+							if (autosave) {
+								member._export.usage |= PROPERTY_USAGE_SAVE;
+							}
+							/* KENOS CORE MODIFICATION END */
+
 							member._export.hint_string = member.data_type.native_type;
 							member._export.class_name = member.data_type.native_type;
 						} else {

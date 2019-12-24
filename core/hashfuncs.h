@@ -31,6 +31,7 @@
 #ifndef HASHFUNCS_H
 #define HASHFUNCS_H
 
+#include "core/guid.h"
 #include "core/math/math_defs.h"
 #include "core/math/math_funcs.h"
 #include "core/node_path.h"
@@ -151,6 +152,7 @@ struct HashMapHasherDefault {
 
 	static _FORCE_INLINE_ uint32_t hash(const StringName &p_string_name) { return p_string_name.hash(); }
 	static _FORCE_INLINE_ uint32_t hash(const NodePath &p_path) { return p_path.hash(); }
+	static _FORCE_INLINE_ uint32_t hash(const Guid &p_guid) { return hash_one_uint64(p_guid.hash()); }
 
 	//static _FORCE_INLINE_ uint32_t hash(const void* p_ptr)  { return uint32_t(uint64_t(p_ptr))*(0x9e3779b1L); }
 };

@@ -52,6 +52,9 @@
 	CASE_TYPE(PREFIX, OP, AABB)               \
 	CASE_TYPE(PREFIX, OP, BASIS)              \
 	CASE_TYPE(PREFIX, OP, TRANSFORM)          \
+	/* KENOS CORE MODIFICATION START */       \
+	CASE_TYPE(PREFIX, OP, GUID)               \
+	/* KENOS CORE MODIFICATION END */         \
 	CASE_TYPE(PREFIX, OP, COLOR)              \
 	CASE_TYPE(PREFIX, OP, NODE_PATH)          \
 	CASE_TYPE(PREFIX, OP, _RID)               \
@@ -85,6 +88,9 @@
 		TYPE(PREFIX, OP, AABB),              \
 		TYPE(PREFIX, OP, BASIS),              \
 		TYPE(PREFIX, OP, TRANSFORM),          \
+/* KENOS CORE MODIFICATION START */     \
+	CASE_TYPE(PREFIX, OP, GUID)               \
+	/* KENOS CORE MODIFICATION END */       \
 		TYPE(PREFIX, OP, COLOR),              \
 		TYPE(PREFIX, OP, NODE_PATH),          \
 		TYPE(PREFIX, OP, _RID),               \
@@ -469,6 +475,9 @@ void Variant::evaluate(const Operator &p_op, const Variant &p_a,
 			DEFAULT_OP_PTRREF_NULL(math, OP_EQUAL, AABB, ==, _aabb);
 			DEFAULT_OP_PTRREF_NULL(math, OP_EQUAL, BASIS, ==, _basis);
 			DEFAULT_OP_PTRREF_NULL(math, OP_EQUAL, TRANSFORM, ==, _transform);
+			/* KENOS CORE MODIFICATION START */
+			DEFAULT_OP_PTRREF_NULL(math, OP_EQUAL, GUID, ==, _guid);
+			/* KENOS CORE MODIFICATION END */
 			DEFAULT_OP_LOCALMEM_NULL(math, OP_EQUAL, COLOR, ==, Color);
 			DEFAULT_OP_STR_NULL(math, OP_EQUAL, NODE_PATH, ==, NodePath);
 			DEFAULT_OP_LOCALMEM_NULL(math, OP_EQUAL, _RID, ==, RID);
@@ -559,6 +568,9 @@ void Variant::evaluate(const Operator &p_op, const Variant &p_a,
 			DEFAULT_OP_PTRREF_NULL(math, OP_NOT_EQUAL, AABB, !=, _aabb);
 			DEFAULT_OP_PTRREF_NULL(math, OP_NOT_EQUAL, BASIS, !=, _basis);
 			DEFAULT_OP_PTRREF_NULL(math, OP_NOT_EQUAL, TRANSFORM, !=, _transform);
+			/* KENOS CORE MODIFICATION START */
+			DEFAULT_OP_PTRREF_NULL(math, OP_NOT_EQUAL, GUID, !=, _guid);
+			/* KENOS CORE MODIFICATION END */
 			DEFAULT_OP_LOCALMEM_NULL(math, OP_NOT_EQUAL, COLOR, !=, Color);
 			DEFAULT_OP_STR_NULL(math, OP_NOT_EQUAL, NODE_PATH, !=, NodePath);
 			DEFAULT_OP_LOCALMEM_NULL(math, OP_NOT_EQUAL, _RID, !=, RID);

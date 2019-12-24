@@ -31,6 +31,7 @@
 #include "animation_blend_space_1d_editor.h"
 
 #include "core/os/keyboard.h"
+#include "scene/animation/animation_blend_space_cyclic_1d.h"
 #include "scene/animation/animation_blend_tree.h"
 
 StringName AnimationNodeBlendSpace1DEditor::get_blend_position_path() const {
@@ -56,7 +57,14 @@ void AnimationNodeBlendSpace1DEditor::_blend_space_gui_input(const Ref<InputEven
 		animations_to_add.clear();
 
 		List<StringName> classes;
-		ClassDB::get_inheriters_from_class("AnimationRootNode", &classes);
+
+		// BlendSpaceCyclic1d can only use pure animation nodes (for now)
+		if (Object::cast_to<AnimationNodeBlendSpaceCyclic1D>(blend_space.ptr())) {
+			ClassDB::get_inheriters_from_class("AnimationNodeAnimation", &classes);
+		} else {
+			ClassDB::get_inheriters_from_class("AnimationRootNode", &classes);
+		}
+
 		classes.sort_custom<StringName::AlphCompare>();
 
 		menu->add_submenu_item(TTR("Add Animation"), "animations");

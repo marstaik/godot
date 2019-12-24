@@ -56,6 +56,7 @@ thirdparty_misc_sources = [
     "pcg.cpp",
     "triangulator.cpp",
     "clipper.cpp",
+    "guid.cpp"
 ]
 thirdparty_misc_sources = [thirdparty_misc_dir + file for file in thirdparty_misc_sources]
 env_thirdparty.add_source_files(env.core_sources, thirdparty_misc_sources)

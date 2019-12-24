@@ -31,6 +31,10 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
+/* KENOS CORE MODIFICATION START */
+#include "core/guid.h"
+/* KENOS CORE MODIFICATION END */
+
 #include "core/hash_map.h"
 #include "core/list.h"
 #include "core/map.h"
@@ -123,6 +127,10 @@ enum PropertyUsageFlags {
 	PROPERTY_USAGE_NODE_PATH_FROM_SCENE_ROOT = 1 << 23,
 	PROPERTY_USAGE_RESOURCE_NOT_PERSISTENT = 1 << 24,
 	PROPERTY_USAGE_KEYING_INCREMENTS = 1 << 25, // Used in inspector to increment property when keyed in animation player
+
+	/* KENOS CORE MODIFICAITON START */
+	PROPERTY_USAGE_SAVE = 1 << 26, // Used to mark an export as being saveable
+	/* KENOS CORE MODIFICAITON END */
 
 	PROPERTY_USAGE_DEFAULT = PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_NETWORK,
 	PROPERTY_USAGE_DEFAULT_INTL = PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_NETWORK | PROPERTY_USAGE_INTERNATIONALIZED,
@@ -469,6 +477,10 @@ private:
 		Signal() { lock = 0; }
 	};
 
+	/* KENOS CORE MODIFICATION START */
+	Guid guid;
+	/* KENOS CORE MODIFICATION END */
+
 	HashMap<StringName, Signal> signal_map;
 	List<Connection> connections;
 #ifdef DEBUG_ENABLED
@@ -752,6 +764,14 @@ public:
 
 	Object();
 	virtual ~Object();
+
+	/* KENOS CORE MODIFICATION START */
+public:
+	const Guid &get_guid() const { return guid; }
+	void set_guid(const Guid &p_guid) { guid = p_guid; }
+
+	void get_property_save_list(List<PropertyInfo> *p_list, bool p_reversed = false) const;
+	/* KENOS CORE MODIFICATION END */
 };
 
 bool predelete_handler(Object *p_object);
