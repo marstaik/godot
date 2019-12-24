@@ -90,6 +90,9 @@ enum {
 	FORMAT_VERSION_CAN_RENAME_DEPS = 1,
 	FORMAT_VERSION_NO_NODEPATH_PROPERTY = 3,
 
+	/* KENOS CORE MODIFICATION START */
+	VARIANT_GUID = 42
+	/* KENOS CORE MODIFICATION END */
 };
 
 void ResourceInteractiveLoaderBinary::_advance_padding(uint32_t p_len) {
@@ -255,6 +258,29 @@ Error ResourceInteractiveLoaderBinary::parse_variant(Variant &r_v) {
 			v.origin.z = f->get_real();
 			r_v = v;
 		} break;
+		/* KENOS CORE MODIFICATION START */
+		case VARIANT_GUID: {
+			Guid g;
+			g[0] = f->get_8();
+			g[1] = f->get_8();
+			g[2] = f->get_8();
+			g[3] = f->get_8();
+			g[4] = f->get_8();
+			g[5] = f->get_8();
+			g[6] = f->get_8();
+			g[7] = f->get_8();
+			g[8] = f->get_8();
+			g[9] = f->get_8();
+			g[10] = f->get_8();
+			g[11] = f->get_8();
+			g[12] = f->get_8();
+			g[13] = f->get_8();
+			g[14] = f->get_8();
+			g[15] = f->get_8();
+			r_v = g;
+
+		} break;
+		/* KENOS CORE MODIFICATION END */
 		case VARIANT_COLOR: {
 
 			Color v;
@@ -1429,6 +1455,29 @@ void ResourceFormatSaverBinaryInstance::write_variant(FileAccess *f, const Varia
 			f->store_real(val.origin.z);
 
 		} break;
+		/* KENOS CORE MODIFICATION START */
+		case Variant::GUID: {
+			f->store_32(VARIANT_GUID);
+			Guid val = p_property;
+			f->store_8(val[0]);
+			f->store_8(val[1]);
+			f->store_8(val[2]);
+			f->store_8(val[3]);
+			f->store_8(val[4]);
+			f->store_8(val[5]);
+			f->store_8(val[6]);
+			f->store_8(val[7]);
+			f->store_8(val[8]);
+			f->store_8(val[9]);
+			f->store_8(val[10]);
+			f->store_8(val[11]);
+			f->store_8(val[12]);
+			f->store_8(val[13]);
+			f->store_8(val[14]);
+			f->store_8(val[15]);
+
+		} break;
+		/* KENOS CORE MODIFICATION END */
 		case Variant::COLOR: {
 
 			f->store_32(VARIANT_COLOR);

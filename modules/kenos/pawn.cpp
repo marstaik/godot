@@ -15,12 +15,9 @@
  */
 
 #include "pawn.h"
+#include "core/print_string.h"
 
 void Pawn::_get_property_list(List<PropertyInfo> *p_list) const {
-}
-
-void Pawn::_get_property_save_list(List<PropertyInfo> *p_list) const {
-	p_list->push_back(PropertyInfo(Variant::NIL, "Dummy2", PROPERTY_HINT_NONE, String(), PROPERTY_USAGE_CATEGORY));
 }
 
 void Pawn::_bind_methods() {
@@ -28,13 +25,16 @@ void Pawn::_bind_methods() {
 }
 
 void Pawn::print_properties() const {
+
 	List<PropertyInfo> list;
-	get_property_save_list(&list);
+	get_property_list(&list);
 
 	for (int i = 0; i < list.size(); ++i) {
-		print_line(list[i].name.c_str());
+		if ((list[i].usage & PROPERTY_USAGE_SAVE) != 0)
+			print_line(list[i].name.c_str());
 	}
 }
 
 Pawn::Pawn() {
+	set_process(true);
 }

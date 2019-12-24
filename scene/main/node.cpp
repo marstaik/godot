@@ -2847,6 +2847,10 @@ void Node::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("update_configuration_warning"), &Node::update_configuration_warning);
 
+	/* KENOS CORE MODIFICATION START */
+	ADD_PROPERTY(PropertyInfo(Variant::GUID, "guid", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SAVE), "set_guid", "get_guid");
+	/* KENOS CORE MODIFICATION END */
+
 	BIND_CONSTANT(NOTIFICATION_ENTER_TREE);
 	BIND_CONSTANT(NOTIFICATION_EXIT_TREE);
 	BIND_CONSTANT(NOTIFICATION_MOVED_IN_PARENT);

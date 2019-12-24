@@ -23,10 +23,7 @@ class Pawn : public Spatial {
 	GDCLASS(Pawn, Spatial);
 
 protected:
-	virtual bool _is_saveable() const { return true; }
-
 	void _get_property_list(List<PropertyInfo> *p_list) const;
-	void _get_property_save_list(List<PropertyInfo> *p_list) const;
 	static void _bind_methods();
 
 public:

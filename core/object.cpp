@@ -1755,6 +1755,11 @@ void Object::_bind_methods() {
 	BIND_ENUM_CONSTANT(CONNECT_PERSIST);
 	BIND_ENUM_CONSTANT(CONNECT_ONESHOT);
 	BIND_ENUM_CONSTANT(CONNECT_REFERENCE_COUNTED);
+
+	/* KENOS CORE MODIFICATION START */
+	ClassDB::bind_method(D_METHOD("get_guid"), &Object::get_guid);
+	ClassDB::bind_method(D_METHOD("set_guid", "guid"), &Object::set_guid);
+	/* KENOS CORE MODIFICATION END */
 }
 
 void Object::call_deferred(const StringName &p_method, VARIANT_ARG_DECLARE) {
@@ -1934,6 +1939,10 @@ Object::Object() {
 #ifdef DEBUG_ENABLED
 	_lock_index.init(1);
 #endif
+
+	/* KENOS CORE MODIFICATION START */
+	guid.init();
+	/* KENOS CORE MODIFICATION END */
 }
 
 Object::~Object() {
@@ -1981,30 +1990,6 @@ Object::~Object() {
 		}
 	}
 }
-
-/* KENOS CORE MODIFICATION START */
-void Object::get_property_save_list(List<PropertyInfo> *p_list, bool p_reversed) const {
-	if (script_instance && p_reversed) {
-#ifdef TOOLS_ENABLED
-		//p_list->push_back(PropertyInfo(Variant::NIL, "Script Variables", PROPERTY_HINT_NONE, String(), PROPERTY_USAGE_CATEGORY));
-#endif
-		//object->get_script_instance()->get_property_list(p_list);
-	}
-
-	_get_property_save_listv(p_list, p_reversed);
-
-	if (script_instance && !p_reversed) {
-#ifdef TOOLS_ENABLED
-		p_list->push_back(PropertyInfo(Variant::NIL, "Script Variables", PROPERTY_HINT_NONE, String(), PROPERTY_USAGE_CATEGORY));
-#endif
-		//object->get_script_instance()->get_property_save_list(p_list);
-	}
-}
-
-void Object::_get_property_save_list(List<PropertyInfo> *p_list) const {
-	p_list->push_back(PropertyInfo(Variant::NIL, "Dummy", PROPERTY_HINT_NONE, String(), PROPERTY_USAGE_CATEGORY));
-}
-/* KENOS CORE MODIFICATION END */
 
 bool predelete_handler(Object *p_object) {
 
@@ -2068,6 +2053,24 @@ void ObjectDB::debug_objects(DebugFunc p_func) {
 
 void Object::get_argument_options(const StringName &p_function, int p_idx, List<String> *r_options) const {
 }
+
+/* KENOS CORE MODIFICATION START */
+void Object::get_property_save_list(List<PropertyInfo> *p_list, bool p_reversed) const {
+
+	get_property_list(p_list, p_reversed);
+
+	List<PropertyInfo>::Element *el = p_list->front();
+	while (el) {
+		if ((el->get().usage & PropertyUsageFlags::PROPERTY_USAGE_SAVE) == 0) {
+			List<PropertyInfo>::Element *rm = el;
+			el = el->next();
+			p_list->erase(rm);
+			continue;
+		}
+		el = el->next();
+	}
+}
+/* KENOS CORE MODIFICATION END */
 
 int ObjectDB::get_object_count() {
 

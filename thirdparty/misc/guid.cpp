@@ -136,20 +136,20 @@ Guid::operator std::string() const {
 }
 
 // Access underlying bytes
-const std::array<unsigned char, 16> &Guid::bytes() const {
+const std::array<uint8_t, 16> &Guid::bytes() const {
 	return _bytes;
 }
 
 // create a guid from vector of bytes
-Guid::Guid(const std::array<unsigned char, 16> &bytes) :
+Guid::Guid(const std::array<uint8_t, 16> &bytes) :
 		_bytes(bytes) {}
 
 // create a guid from vector of bytes
-Guid::Guid(std::array<unsigned char, 16> &&bytes) :
+Guid::Guid(std::array<uint8_t, 16> &&bytes) :
 		_bytes(std::move(bytes)) {}
 
 // converts a single hex char to a number (0 - 15)
-unsigned char hexDigitToChar(char ch) {
+uint8_t hexDigitToChar(char ch) {
 	// 0-9
 	if (ch > 47 && ch < 58)
 		return ch - 48;
@@ -181,8 +181,8 @@ bool isValidHexChar(char ch) {
 	return false;
 }
 
-// converts the two hexadecimal characters to an unsigned char (a byte)
-unsigned char hexPairToChar(char a, char b) {
+// converts the two hexadecimal characters to an uint8_t (a byte)
+uint8_t hexPairToChar(char a, char b) {
 	return hexDigitToChar(a) * 16 + hexDigitToChar(b);
 }
 
@@ -229,7 +229,7 @@ Guid::Guid() :
 
 // set all bytes to zero
 void Guid::zeroify() {
-	std::fill(_bytes.begin(), _bytes.end(), static_cast<unsigned char>(0));
+	std::fill(_bytes.begin(), _bytes.end(), static_cast<uint8_t>(0));
 }
 
 // overload equality operator
@@ -251,8 +251,8 @@ void Guid::swap(Guid &other) {
 // systems that have libuuid available
 #ifdef GUID_LIBUUID
 Guid newGuid() {
-	std::array<unsigned char, 16> data;
-	static_assert(std::is_same<unsigned char[16], uuid_t>::value, "Wrong type!");
+	std::array<uint8_t, 16> data;
+	static_assert(std::is_same<uint8_t[16], uuid_t>::value, "Wrong type!");
 	uuid_generate(data.data());
 	return Guid{ std::move(data) };
 }
@@ -265,7 +265,7 @@ Guid newGuid() {
 	auto bytes = CFUUIDGetUUIDBytes(newId);
 	CFRelease(newId);
 
-	std::array<unsigned char, 16> byteArray = { { bytes.byte0,
+	std::array<uint8_t, 16> byteArray = { { bytes.byte0,
 			bytes.byte1,
 			bytes.byte2,
 			bytes.byte3,
@@ -291,26 +291,26 @@ Guid newGuid() {
 	GUID newId;
 	CoCreateGuid(&newId);
 
-	std::array<unsigned char, 16> bytes = {
-		(unsigned char)((newId.Data1 >> 24) & 0xFF),
-		(unsigned char)((newId.Data1 >> 16) & 0xFF),
-		(unsigned char)((newId.Data1 >> 8) & 0xFF),
-		(unsigned char)((newId.Data1) & 0xff),
+	std::array<uint8_t, 16> bytes = {
+		(uint8_t)((newId.Data1 >> 24) & 0xFF),
+		(uint8_t)((newId.Data1 >> 16) & 0xFF),
+		(uint8_t)((newId.Data1 >> 8) & 0xFF),
+		(uint8_t)((newId.Data1) & 0xff),
 
-		(unsigned char)((newId.Data2 >> 8) & 0xFF),
-		(unsigned char)((newId.Data2) & 0xff),
+		(uint8_t)((newId.Data2 >> 8) & 0xFF),
+		(uint8_t)((newId.Data2) & 0xff),
 
-		(unsigned char)((newId.Data3 >> 8) & 0xFF),
-		(unsigned char)((newId.Data3) & 0xFF),
+		(uint8_t)((newId.Data3 >> 8) & 0xFF),
+		(uint8_t)((newId.Data3) & 0xFF),
 
-		(unsigned char)newId.Data4[0],
-		(unsigned char)newId.Data4[1],
-		(unsigned char)newId.Data4[2],
-		(unsigned char)newId.Data4[3],
-		(unsigned char)newId.Data4[4],
-		(unsigned char)newId.Data4[5],
-		(unsigned char)newId.Data4[6],
-		(unsigned char)newId.Data4[7]
+		(uint8_t)newId.Data4[0],
+		(uint8_t)newId.Data4[1],
+		(uint8_t)newId.Data4[2],
+		(uint8_t)newId.Data4[3],
+		(uint8_t)newId.Data4[4],
+		(uint8_t)newId.Data4[5],
+		(uint8_t)newId.Data4[6],
+		(uint8_t)newId.Data4[7]
 	};
 
 	return Guid{ std::move(bytes) };
@@ -329,23 +329,23 @@ Guid newGuid(JNIEnv *env) {
 	jlong leastSignificant = env->CallLongMethod(javaUuid,
 			androidInfo.leastSignificantBitsMethod);
 
-	std::array<unsigned char, 16> bytes = {
-		(unsigned char)((mostSignificant >> 56) & 0xFF),
-		(unsigned char)((mostSignificant >> 48) & 0xFF),
-		(unsigned char)((mostSignificant >> 40) & 0xFF),
-		(unsigned char)((mostSignificant >> 32) & 0xFF),
-		(unsigned char)((mostSignificant >> 24) & 0xFF),
-		(unsigned char)((mostSignificant >> 16) & 0xFF),
-		(unsigned char)((mostSignificant >> 8) & 0xFF),
-		(unsigned char)((mostSignificant)&0xFF),
-		(unsigned char)((leastSignificant >> 56) & 0xFF),
-		(unsigned char)((leastSignificant >> 48) & 0xFF),
-		(unsigned char)((leastSignificant >> 40) & 0xFF),
-		(unsigned char)((leastSignificant >> 32) & 0xFF),
-		(unsigned char)((leastSignificant >> 24) & 0xFF),
-		(unsigned char)((leastSignificant >> 16) & 0xFF),
-		(unsigned char)((leastSignificant >> 8) & 0xFF),
-		(unsigned char)((leastSignificant)&0xFF)
+	std::array<uint8_t, 16> bytes = {
+		(uint8_t)((mostSignificant >> 56) & 0xFF),
+		(uint8_t)((mostSignificant >> 48) & 0xFF),
+		(uint8_t)((mostSignificant >> 40) & 0xFF),
+		(uint8_t)((mostSignificant >> 32) & 0xFF),
+		(uint8_t)((mostSignificant >> 24) & 0xFF),
+		(uint8_t)((mostSignificant >> 16) & 0xFF),
+		(uint8_t)((mostSignificant >> 8) & 0xFF),
+		(uint8_t)((mostSignificant)&0xFF),
+		(uint8_t)((leastSignificant >> 56) & 0xFF),
+		(uint8_t)((leastSignificant >> 48) & 0xFF),
+		(uint8_t)((leastSignificant >> 40) & 0xFF),
+		(uint8_t)((leastSignificant >> 32) & 0xFF),
+		(uint8_t)((leastSignificant >> 24) & 0xFF),
+		(uint8_t)((leastSignificant >> 16) & 0xFF),
+		(uint8_t)((leastSignificant >> 8) & 0xFF),
+		(uint8_t)((leastSignificant)&0xFF)
 	};
 
 	env->DeleteLocalRef(javaUuid);

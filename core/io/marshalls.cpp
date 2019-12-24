@@ -314,6 +314,19 @@ Error decode_variant(Variant &r_variant, const uint8_t *p_buffer, int p_len, int
 
 		} break;
 
+		/* KENOS CORE MODIFICATION START */
+		case Variant::GUID: {
+			ERR_FAIL_COND_V(len < 4 * 16, ERR_INVALID_DATA);
+
+			const std::array<uint8_t, 16> *g_array = reinterpret_cast<const std::array<uint8_t, 16> *>(buf);
+			r_variant = Guid(*g_array);
+
+			if (r_len)
+				(*r_len) += 4 * 16;
+
+		} break;
+		/* KENOS CORE MODIFICATION END */
+
 		// misc types
 		case Variant::COLOR: {
 
@@ -1046,7 +1059,19 @@ Error encode_variant(const Variant &p_variant, uint8_t *r_buffer, int &r_len, bo
 			r_len += 12 * 4;
 
 		} break;
+		/* KENOS CORE MODIFICATION START */
+		case Variant::GUID: {
 
+			if (buf) {
+				Guid val = p_variant;
+				copymem(buf, val.data(), sizeof(uint8_t) * 16);
+			}
+
+			r_len += 16 * 4;
+
+		} break;
+
+		/* KENOS CORE MODIFICATION END */
 		// misc types
 		case Variant::COLOR: {
 
