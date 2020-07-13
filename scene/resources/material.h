@@ -145,15 +145,24 @@ public:
 
 	enum DetailUV {
 		DETAIL_UV_1,
-		DETAIL_UV_2
+		DETAIL_UV_2,
+		DETAIL_UV_MAX
 	};
 
 	enum Transparency {
 		TRANSPARENCY_DISABLED,
 		TRANSPARENCY_ALPHA,
 		TRANSPARENCY_ALPHA_SCISSOR,
+		TRANSPARENCY_ALPHA_HASH,
 		TRANSPARENCY_ALPHA_DEPTH_PRE_PASS,
 		TRANSPARENCY_MAX,
+	};
+
+	enum AlphaAntiAliasing {
+		ALPHA_ANTIALIASING_OFF,
+		ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE,
+		ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE,
+		ALPHA_ANTIALIASING_MAX
 	};
 
 	enum ShadingMode {
@@ -184,18 +193,21 @@ public:
 		BLEND_MODE_ADD,
 		BLEND_MODE_SUB,
 		BLEND_MODE_MUL,
+		BLEND_MODE_MAX
 	};
 
 	enum DepthDrawMode {
 		DEPTH_DRAW_OPAQUE_ONLY,
 		DEPTH_DRAW_ALWAYS,
 		DEPTH_DRAW_DISABLED,
+		DEPTH_DRAW_MAX
 	};
 
 	enum CullMode {
 		CULL_BACK,
 		CULL_FRONT,
-		CULL_DISABLED
+		CULL_DISABLED,
+		CULL_MAX
 	};
 
 	enum Flags {
@@ -227,6 +239,7 @@ public:
 		DIFFUSE_LAMBERT_WRAP,
 		DIFFUSE_OREN_NAYAR,
 		DIFFUSE_TOON,
+		DIFFUSE_MAX
 	};
 
 	enum SpecularMode {
@@ -235,6 +248,7 @@ public:
 		SPECULAR_PHONG,
 		SPECULAR_TOON,
 		SPECULAR_DISABLED,
+		SPECULAR_MAX
 	};
 
 	enum BillboardMode {
@@ -242,6 +256,7 @@ public:
 		BILLBOARD_ENABLED,
 		BILLBOARD_FIXED_Y,
 		BILLBOARD_PARTICLES,
+		BILLBOARD_MAX
 	};
 
 	enum TextureChannel {
@@ -249,12 +264,14 @@ public:
 		TEXTURE_CHANNEL_GREEN,
 		TEXTURE_CHANNEL_BLUE,
 		TEXTURE_CHANNEL_ALPHA,
-		TEXTURE_CHANNEL_GRAYSCALE
+		TEXTURE_CHANNEL_GRAYSCALE,
+		TEXTURE_CHANNEL_MAX
 	};
 
 	enum EmissionOperator {
 		EMISSION_OP_ADD,
-		EMISSION_OP_MULTIPLY
+		EMISSION_OP_MULTIPLY,
+		EMISSION_OP_MAX
 	};
 
 	enum DistanceFadeMode {
@@ -262,31 +279,37 @@ public:
 		DISTANCE_FADE_PIXEL_ALPHA,
 		DISTANCE_FADE_PIXEL_DITHER,
 		DISTANCE_FADE_OBJECT_DITHER,
+		DISTANCE_FADE_MAX
 	};
 
 private:
 	union MaterialKey {
+		// parameters values
 		struct {
+			// enums
+			uint64_t texture_filter : TEXTURE_FILTER_MAX;
+			uint64_t detail_uv : DETAIL_UV_MAX;
+			uint64_t transparency : TRANSPARENCY_MAX;
+			uint64_t alpha_antialiasing_mode : ALPHA_ANTIALIASING_MAX;
+			uint64_t shading_mode : SHADING_MODE_MAX;
 			uint64_t feature_mask : FEATURE_MAX;
-			uint64_t detail_uv : 1;
-			uint64_t blend_mode : 2;
-			uint64_t depth_draw_mode : 2;
-			uint64_t cull_mode : 2;
+			uint64_t blend_mode : BLEND_MODE_MAX;
+			uint64_t depth_draw_mode : DEPTH_DRAW_MAX;
+			uint64_t cull_mode : CULL_MAX;
 			uint64_t flags : FLAG_MAX;
-			uint64_t detail_blend_mode : 2;
-			uint64_t diffuse_mode : 3;
-			uint64_t specular_mode : 3;
-			uint64_t invalid_key : 1;
+			uint64_t diffuse_mode : DIFFUSE_MAX;
+			uint64_t specular_mode : SPECULAR_MAX;
+			uint64_t billboard_mode : BILLBOARD_MAX;
+			uint64_t detail_blend_mode : BLEND_MODE_MAX;
+			uint64_t roughness_channel : TEXTURE_CHANNEL_MAX;
+			uint64_t emission_op : EMISSION_OP_MAX;
+			uint64_t distance_fade : DISTANCE_FADE_MAX;
+
+			// booleans
 			uint64_t deep_parallax : 1;
-			uint64_t billboard_mode : 2;
 			uint64_t grow : 1;
 			uint64_t proximity_fade : 1;
-			uint64_t distance_fade : 2;
-			uint64_t emission_op : 1;
-			uint64_t texture_filter : 3;
-			uint64_t transparency : 2;
-			uint64_t shading_mode : 2;
-			uint64_t roughness_channel : 3;
+			uint64_t invalid_key : 1;
 		};
 
 		struct {
@@ -294,9 +317,13 @@ private:
 			uint64_t key1;
 		};
 
+		MaterialKey() :
+				key0(0), key1(0) {}
+
 		bool operator==(const MaterialKey &p_key) const {
 			return (key0 == p_key.key0) && (key1 == p_key.key1);
 		}
+
 		bool operator<(const MaterialKey &p_key) const {
 			return (key0 == p_key.key0) ? (key1 < p_key.key1) : (key0 < p_key.key0);
 		}
@@ -313,8 +340,7 @@ private:
 
 	_FORCE_INLINE_ MaterialKey _compute_key() const {
 		MaterialKey mk;
-		mk.key0 = 0;
-		mk.key1 = 0;
+
 		for (int i = 0; i < FEATURE_MAX; i++) {
 			if (features[i]) {
 				mk.feature_mask |= ((uint64_t)1 << i);
@@ -337,11 +363,12 @@ private:
 		mk.diffuse_mode = diffuse_mode;
 		mk.specular_mode = specular_mode;
 		mk.billboard_mode = billboard_mode;
-		mk.deep_parallax = deep_parallax ? 1 : 0;
+		mk.deep_parallax = deep_parallax;
 		mk.grow = grow_enabled;
 		mk.proximity_fade = proximity_fade_enabled;
 		mk.distance_fade = distance_fade;
 		mk.emission_op = emission_op;
+		mk.alpha_antialiasing_mode = alpha_antialiasing_mode;
 
 		return mk;
 	}
@@ -392,9 +419,14 @@ private:
 		StringName rim_texture_channel;
 		StringName heightmap_texture_channel;
 		StringName refraction_texture_channel;
-		StringName alpha_scissor_threshold;
 
 		StringName texture_names[TEXTURE_MAX];
+
+		StringName alpha_scissor_threshold;
+		StringName alpha_hash_scale;
+
+		StringName alpha_antialiasing_edge;
+		StringName albedo_texture_size;
 	};
 
 	static Mutex material_mutex;
@@ -433,6 +465,8 @@ private:
 	float refraction;
 	float point_size;
 	float alpha_scissor_threshold;
+	float alpha_hash_scale;
+	float alpha_antialiasing_edge;
 	bool grow_enabled;
 	float ao_light_affect;
 	float grow;
@@ -481,6 +515,8 @@ private:
 	TextureChannel roughness_texture_channel;
 	TextureChannel ao_texture_channel;
 	TextureChannel refraction_texture_channel;
+
+	AlphaAntiAliasing alpha_antialiasing_mode;
 
 	bool features[FEATURE_MAX];
 
@@ -584,6 +620,12 @@ public:
 	void set_transparency(Transparency p_transparency);
 	Transparency get_transparency() const;
 
+	void set_alpha_antialiasing(AlphaAntiAliasing p_alpha_aa);
+	AlphaAntiAliasing get_alpha_antialiasing() const;
+
+	void set_alpha_antialiasing_edge(float p_edge);
+	float get_alpha_antialiasing_edge() const;
+
 	void set_shading_mode(ShadingMode p_shading_mode);
 	ShadingMode get_shading_mode() const;
 
@@ -660,6 +702,9 @@ public:
 	void set_alpha_scissor_threshold(float p_threshold);
 	float get_alpha_scissor_threshold() const;
 
+	void set_alpha_hash_scale(float p_scale);
+	float get_alpha_hash_scale() const;
+
 	void set_on_top_of_alpha();
 
 	void set_proximity_fade(bool p_enable);
@@ -707,6 +752,7 @@ VARIANT_ENUM_CAST(BaseMaterial3D::TextureParam)
 VARIANT_ENUM_CAST(BaseMaterial3D::TextureFilter)
 VARIANT_ENUM_CAST(BaseMaterial3D::ShadingMode)
 VARIANT_ENUM_CAST(BaseMaterial3D::Transparency)
+VARIANT_ENUM_CAST(BaseMaterial3D::AlphaAntiAliasing)
 VARIANT_ENUM_CAST(BaseMaterial3D::DetailUV)
 VARIANT_ENUM_CAST(BaseMaterial3D::Feature)
 VARIANT_ENUM_CAST(BaseMaterial3D::BlendMode)
