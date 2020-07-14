@@ -1774,6 +1774,11 @@ FRAGMENT_SHADER_CODE
 	}
 #endif // ALPHA_HASH_USED
 
+// If we are not edge antialiasing, we need to remove the output alpha channel from scissor and hash
+#if (defined(ALPHA_SCISSOR_USED) || defined(ALPHA_HASH_USED)) && !defined(ALPHA_ANTIALIASING_EDGE_USED)
+	alpha = 1.0;
+#endif
+
 #ifdef ALPHA_ANTIALIASING_EDGE_USED
 // If alpha scissor is used, we must further the edge threshold, otherwise we wont get any edge feather
 #ifdef ALPHA_SCISSOR_USED
