@@ -440,6 +440,8 @@ void BaseMaterial3D::_update_shader() {
 		case BLEND_MODE_MUL:
 			code += "blend_mul";
 			break;
+		case BLEND_MODE_MAX:
+			break; // Internal value, skip.
 	}
 
 	DepthDrawMode ddm = depth_draw_mode;
@@ -457,6 +459,8 @@ void BaseMaterial3D::_update_shader() {
 		case DEPTH_DRAW_DISABLED:
 			code += ",depth_draw_never";
 			break;
+		case DEPTH_DRAW_MAX:
+			break; // Internal value, skip.
 	}
 
 	switch (cull_mode) {
@@ -469,6 +473,8 @@ void BaseMaterial3D::_update_shader() {
 		case CULL_DISABLED:
 			code += ",cull_disabled";
 			break;
+		case CULL_MAX:
+			break; // Internal value, skip.
 	}
 	switch (diffuse_mode) {
 		case DIFFUSE_BURLEY:
@@ -486,6 +492,8 @@ void BaseMaterial3D::_update_shader() {
 		case DIFFUSE_TOON:
 			code += ",diffuse_toon";
 			break;
+		case DIFFUSE_MAX:
+			break; // Internal value, skip.
 	}
 	switch (specular_mode) {
 		case SPECULAR_SCHLICK_GGX:
@@ -503,6 +511,8 @@ void BaseMaterial3D::_update_shader() {
 		case SPECULAR_DISABLED:
 			code += ",specular_disabled";
 			break;
+		case SPECULAR_MAX:
+			break; // Internal value, skip.
 	}
 	if (features[FEATURE_SUBSURFACE_SCATTERING] && flags[FLAG_SUBSURFACE_MODE_SKIN]) {
 		code += ",sss_mode_skin";
@@ -567,7 +577,8 @@ void BaseMaterial3D::_update_shader() {
 		code += "uniform float alpha_hash_scale;\n";
 	}
 	// if alpha antialiasing isn't off, add in the edge variable
-	if (transparency != ALPHA_ANTIALIASING_OFF) {
+	if (alpha_antialiasing_mode != ALPHA_ANTIALIASING_OFF &&
+			(transparency == TRANSPARENCY_ALPHA_SCISSOR || transparency == TRANSPARENCY_ALPHA_HASH)) {
 		code += "uniform float alpha_antialiasing_edge;\n";
 		code += "uniform ivec2 albedo_texture_size;\n";
 	}
@@ -595,6 +606,8 @@ void BaseMaterial3D::_update_shader() {
 			case TEXTURE_CHANNEL_GRAYSCALE: {
 				code += "uniform sampler2D texture_roughness : hint_roughness_gray," + texfilter_str + ";\n";
 			} break;
+			case TEXTURE_CHANNEL_MAX:
+				break; // Internal value, skip.
 		}
 
 		code += "uniform float specular;\n";
@@ -758,6 +771,8 @@ void BaseMaterial3D::_update_shader() {
 			code += "\tUV /= vec2(h_frames, v_frames);\n";
 			code += "\tUV += vec2(mod(particle_frame, h_frames) / h_frames, floor(particle_frame / h_frames) / v_frames);\n";
 		} break;
+		case BILLBOARD_MAX:
+			break; // Internal value, skip.
 	}
 
 	if (flags[FLAG_FIXED_SIZE]) {
@@ -930,6 +945,8 @@ void BaseMaterial3D::_update_shader() {
 			case TEXTURE_CHANNEL_GRAYSCALE: {
 				code += "\tvec4 roughness_texture_channel = vec4(0.333333,0.333333,0.333333,0.0);\n";
 			} break;
+			case TEXTURE_CHANNEL_MAX:
+				break; // Internal value, skip.
 		}
 
 		if (flags[FLAG_UV1_USE_TRIPLANAR]) {
@@ -1177,6 +1194,8 @@ void BaseMaterial3D::_update_shader() {
 			case BLEND_MODE_MUL: {
 				code += "\tvec3 detail = mix(ALBEDO.rgb,ALBEDO.rgb*detail_tex.rgb,detail_tex.a);\n";
 			} break;
+			case BLEND_MODE_MAX:
+				break; // Internal value, skip.
 		}
 
 		code += "\tvec3 detail_norm = mix(NORMALMAP,detail_norm_tex.rgb,detail_tex.a);\n";
@@ -1578,7 +1597,7 @@ void BaseMaterial3D::set_texture(TextureParam p_param, const Ref<Texture2D> &p_t
 	textures[p_param] = p_texture;
 	RID rid = p_texture.is_valid() ? p_texture->get_rid() : RID();
 	RS::get_singleton()->material_set_param(_get_material(), shader_names->texture_names[p_param], rid);
-	if (p_param = TEXTURE_ALBEDO) {
+	if (p_param == TEXTURE_ALBEDO) {
 		RS::get_singleton()->material_set_param(_get_material(), shader_names->albedo_texture_size,
 				Vector2i(p_texture->get_width(), p_texture->get_height()));
 	}
