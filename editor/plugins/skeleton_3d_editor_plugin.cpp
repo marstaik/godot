@@ -274,6 +274,7 @@ BoneTransformEditor::BoneTransformEditor(Skeleton3D *p_skeleton) :
 
 void BoneTransformEditor::set_target(const String &p_prop) {
 	property = p_prop;
+	_update_properties();
 }
 
 void BoneTransformEditor::set_keyable(const bool p_keyable) {
@@ -319,86 +320,113 @@ void Skeleton3DEditor::_on_click_option(int p_option) {
 	}
 
 	switch (p_option) {
-		case MENU_OPTION_CREATE_PHYSICAL_SKELETON: {
+		case Menu::CREATE_PHYSICAL_SKELETON: {
 			create_physical_skeleton();
 			break;
 		}
-	}
-}
-
-void Skeleton3DEditor::create_physical_skeleton() {
-	UndoRedo *ur = EditorNode::get_singleton()->get_undo_redo();
-	ERR_FAIL_COND(!get_tree());
-	Node *owner = skeleton == get_tree()->get_edited_scene_root() ? skeleton : skeleton->get_owner();
-
-	const int bc = skeleton->get_bone_count();
-
-	if (!bc) {
-		return;
-	}
-
-	Vector<BoneInfo> bones_infos;
-	bones_infos.resize(bc);
-
-	for (int bone_id = 0; bc > bone_id; ++bone_id) {
-		const int parent = skeleton->get_bone_parent(bone_id);
-
-		if (parent < 0) {
-			bones_infos.write[bone_id].relative_rest = skeleton->get_bone_rest(bone_id);
-
-		} else {
-			const int parent_parent = skeleton->get_bone_parent(parent);
-
-			bones_infos.write[bone_id].relative_rest = bones_infos[parent].relative_rest * skeleton->get_bone_rest(bone_id);
-
-			/// create physical bone on parent
-			if (!bones_infos[parent].physical_bone) {
-				bones_infos.write[parent].physical_bone = create_physical_bone(parent, bone_id, bones_infos);
-
-				ur->create_action(TTR("Create physical bones"));
-				ur->add_do_method(skeleton, "add_child", bones_infos[parent].physical_bone);
-				ur->add_do_reference(bones_infos[parent].physical_bone);
-				ur->add_undo_method(skeleton, "remove_child", bones_infos[parent].physical_bone);
-				ur->commit_action();
-
-				bones_infos[parent].physical_bone->set_bone_name(skeleton->get_bone_name(parent));
-				bones_infos[parent].physical_bone->set_owner(owner);
-				bones_infos[parent].physical_bone->get_child(0)->set_owner(owner); // set shape owner
-
-				/// Create joint between parent of parent
-				if (-1 != parent_parent) {
-					bones_infos[parent].physical_bone->set_joint_type(PhysicalBone3D::JOINT_TYPE_PIN);
-				}
+		case Menu::RESET_POSE: {
+			skeleton->reset_bone_poses();
+			break;
+		}
+		case Menu::SIMULATE_PHYSICAL_BONES: {
+			if (!options->get_popup()->is_item_checked(p_option)) {
+				skeleton->physical_bones_start_simulation_on(TypedArray<StringName>());
+				options->get_popup()->set_item_checked(p_option, true);
+			} else {
+				skeleton->physical_bones_stop_simulation();
+				options->get_popup()->set_item_checked(p_option, false);
 			}
 		}
 	}
 }
 
-PhysicalBone3D *Skeleton3DEditor::create_physical_bone(int bone_id, int bone_child_id, const Vector<BoneInfo> &bones_infos) {
-	const Transform child_rest = skeleton->get_bone_rest(bone_child_id);
+void Skeleton3DEditor::create_physical_skeleton() {
+	// UndoRedo *ur = EditorNode::get_singleton()->get_undo_redo();
+	// ERR_FAIL_COND(!get_tree());
+	// Node *owner = skeleton == get_tree()->get_edited_scene_root() ? skeleton : skeleton->get_owner();
 
-	const real_t half_height(child_rest.origin.length() * 0.5);
-	const real_t radius(half_height * 0.2);
+	// const int bc = skeleton->get_bone_count();
+
+	// if (!bc) {
+	// 	return;
+	// }
+
+	// Vector<BoneInfo> bones_infos;
+	// bones_infos.resize(bc);
+
+	// for (int bone_id = 0; bc > bone_id; ++bone_id) {
+	// 	const int parent = skeleton->get_bone_parent(bone_id);
+
+	// 	if (parent < 0) {
+	// 		bones_infos.write[bone_id].relative_rest = skeleton->get_bone_rest(bone_id);
+
+	// 	} else {
+	// 		const int parent_parent = skeleton->get_bone_parent(parent);
+
+	// 		bones_infos.write[bone_id].relative_rest = bones_infos[parent].relative_rest * skeleton->get_bone_rest(bone_id);
+
+	// 		/// create physical bone on parent
+	// 		if (!bones_infos[parent].physical_bone) {
+	// 			bones_infos.write[parent].physical_bone = create_physical_bone(parent, bone_id, bones_infos);
+
+	// 			ur->create_action(TTR("Create physical bones"));
+	// 			ur->add_do_method(skeleton, "add_child", bones_infos[parent].physical_bone);
+	// 			ur->add_do_reference(bones_infos[parent].physical_bone);
+	// 			ur->add_undo_method(skeleton, "remove_child", bones_infos[parent].physical_bone);
+	// 			ur->commit_action();
+
+	// 			bones_infos[parent].physical_bone->set_bone_name(skeleton->get_bone_name(parent));
+	// 			bones_infos[parent].physical_bone->set_owner(owner);
+	// 			bones_infos[parent].physical_bone->get_child(0)->set_owner(owner); // set shape owner
+
+	// 			/// Create joint between parent of parent
+	// 			if (-1 != parent_parent) {
+	// 				bones_infos[parent].physical_bone->set_joint_type(PhysicalBone3D::JOINT_TYPE_PIN);
+	// 			}
+	// 		}
+	// 	}
+	// }
+}
+
+void Skeleton3DEditor::create_physical_bones(const Vector<BoneId> &p_bone_ids) {
+	Node *owner = skeleton == get_tree()->get_edited_scene_root() ? skeleton : skeleton->get_owner();
+	for (int i = 0, l = p_bone_ids.size(); i < l; ++i) {
+		PhysicalBone3D *new_bone = create_physical_bone(p_bone_ids[i]);
+		if (new_bone) {
+			skeleton->add_child(new_bone);
+			new_bone->set_owner(owner);
+			new_bone->get_child(0)->set_owner(owner);
+		}
+	}
+}
+
+PhysicalBone3D *Skeleton3DEditor::create_physical_bone(BoneId p_bone_id) const {
+	const int parent_bone_id = skeleton->get_bone_parent(p_bone_id);
+
+	// Need a parent to create a physical bone, for now
+	if (parent_bone_id == -1)
+		return nullptr;
+
+	const Transform parent_rest = skeleton->get_bone_rest(parent_bone_id);
+
+	const real_t half_height = parent_rest.origin.length() / 2;
+	const real_t radius = half_height * 0.2;
 
 	CapsuleShape3D *bone_shape_capsule = memnew(CapsuleShape3D);
+	// remember capsulse is the radius of the sphere + cylinder half height
 	bone_shape_capsule->set_height((half_height - radius) * 2);
 	bone_shape_capsule->set_radius(radius);
 
 	CollisionShape3D *bone_shape = memnew(CollisionShape3D);
 	bone_shape->set_shape(bone_shape_capsule);
+	bone_shape->set_translation(Vector3(0, -half_height, 0));
 
-	Transform body_transform;
-	body_transform.set_look_at(Vector3(0, 0, 0), child_rest.origin, Vector3(0, 1, 0));
-	body_transform.origin = body_transform.basis.xform(Vector3(0, 0, -half_height));
-
-	Transform joint_transform;
-	joint_transform.origin = Vector3(0, 0, half_height);
+	const String bone_name = skeleton->get_bone_name(p_bone_id);
 
 	PhysicalBone3D *physical_bone = memnew(PhysicalBone3D);
 	physical_bone->add_child(bone_shape);
-	physical_bone->set_name("Physical Bone " + skeleton->get_bone_name(bone_id));
-	physical_bone->set_body_offset(body_transform);
-	physical_bone->set_joint_offset(joint_transform);
+	physical_bone->set_name("Physical Bone " + bone_name);
+	physical_bone->set_bone_name(bone_name);
 	return physical_bone;
 }
 
@@ -507,6 +535,8 @@ void Skeleton3DEditor::_joint_tree_selection_changed() {
 }
 
 void Skeleton3DEditor::_joint_tree_rmb_select(const Vector2 &p_pos) {
+	joint_tree_popup->set_position(get_screen_position() + p_pos);
+	joint_tree_popup->popup();
 }
 
 void Skeleton3DEditor::_update_properties() {
@@ -549,6 +579,37 @@ void Skeleton3DEditor::update_joint_tree() {
 	}
 }
 
+void Skeleton3DEditor::_reset_pose() {
+	if (!skeleton)
+		return;
+
+	skeleton->reset_bone_poses();
+	_update_properties();
+}
+
+void Skeleton3DEditor::_joint_tree_popup_selected(int p_option) {
+	if (p_option == JointTreePopupMenu::CREATE_PHYSICAL_BONES) {
+		TreeItem *selected = joint_tree->get_selected();
+		if (!selected)
+			return;
+
+		Vector<BoneId> selected_bones;
+		while (selected) {
+			String node_name = selected->get_metadata(0);
+			if (!node_name.begins_with("bones/")) {
+				selected = joint_tree->get_next_selected(selected);
+				continue;
+			}
+
+			const BoneId bone_idx = node_name.get_slicec('/', 1).to_int();
+			selected_bones.push_back(bone_idx);
+			selected = joint_tree->get_next_selected(selected);
+		}
+
+		create_physical_bones(selected_bones);
+	}
+}
+
 void Skeleton3DEditor::update_editors() {
 }
 
@@ -565,7 +626,9 @@ void Skeleton3DEditor::create_editors() {
 	options->set_text(TTR("Skeleton3D"));
 	options->set_icon(EditorNode::get_singleton()->get_gui_base()->get_theme_icon("Skeleton3D", "EditorIcons"));
 
-	options->get_popup()->add_item(TTR("Create physical skeleton"), MENU_OPTION_CREATE_PHYSICAL_SKELETON);
+	options->get_popup()->add_item(TTR("Create physical skeleton"), Menu::CREATE_PHYSICAL_SKELETON);
+	options->get_popup()->add_item(TTR("Reset Pose"), Menu::RESET_POSE);
+	options->get_popup()->add_check_item(TTR("Simulate Physical Bones"), Menu::SIMULATE_PHYSICAL_BONES);
 
 	options->get_popup()->connect("id_pressed", callable_mp(this, &Skeleton3DEditor::_on_click_option));
 
@@ -584,7 +647,7 @@ void Skeleton3DEditor::create_editors() {
 	joint_tree = memnew(Tree);
 	joint_tree->set_columns(1);
 	joint_tree->set_focus_mode(Control::FocusMode::FOCUS_NONE);
-	joint_tree->set_select_mode(Tree::SELECT_SINGLE);
+	joint_tree->set_select_mode(Tree::SELECT_MULTI);
 	joint_tree->set_hide_root(true);
 	joint_tree->set_v_size_flags(SIZE_EXPAND_FILL);
 	joint_tree->set_h_size_flags(SIZE_EXPAND_FILL);
@@ -608,6 +671,11 @@ void Skeleton3DEditor::create_editors() {
 	custom_pose_editor->set_label(TTR("Bone Custom Pose"));
 	custom_pose_editor->set_visible(false);
 	add_child(custom_pose_editor);
+
+	joint_tree_popup = memnew(PopupMenu());
+	joint_tree_popup->add_icon_item(get_theme_icon("PhysicalBone3D", "EditorIcons"), TTR("Create Physical Bones"), JointTreePopupMenu::CREATE_PHYSICAL_BONES);
+	joint_tree_popup->connect("id_pressed", callable_mp(this, &Skeleton3DEditor::_joint_tree_popup_selected));
+	add_child(joint_tree_popup);
 }
 
 void Skeleton3DEditor::_notification(int p_what) {
@@ -618,11 +686,9 @@ void Skeleton3DEditor::_notification(int p_what) {
 			update_editors();
 
 			get_tree()->connect("node_removed", callable_mp(this, &Skeleton3DEditor::_node_removed), Vector<Variant>(), Object::CONNECT_ONESHOT);
-			joint_tree->connect("item_selected", callable_mp(this, &Skeleton3DEditor::_joint_tree_selection_changed));
+			joint_tree->connect("cell_selected", callable_mp(this, &Skeleton3DEditor::_joint_tree_selection_changed));
 			joint_tree->connect("item_rmb_selected", callable_mp(this, &Skeleton3DEditor::_joint_tree_rmb_select));
-#ifdef TOOLS_ENABLED
 			skeleton->connect("pose_updated", callable_mp(this, &Skeleton3DEditor::_update_properties));
-#endif // TOOLS_ENABLED
 
 			break;
 		}

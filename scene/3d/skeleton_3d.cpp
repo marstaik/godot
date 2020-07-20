@@ -407,6 +407,17 @@ Transform Skeleton3D::get_bone_global_pose(int p_bone) const {
 	return bones[p_bone].pose_global;
 }
 
+Transform Skeleton3D::get_bone_global_rest(int p_bone) const {
+	ERR_FAIL_INDEX_V(p_bone, bones.size(), Transform());
+	Transform tform;
+	do {
+		tform *= bones[p_bone].rest.affine_inverse();
+		p_bone = get_bone_parent(p_bone);
+	} while (p_bone >= 0);
+
+	return tform.affine_inverse();
+}
+
 // skeleton creation api
 void Skeleton3D::add_bone(const String &p_name) {
 	ERR_FAIL_COND(p_name == "" || p_name.find(":") != -1 || p_name.find("/") != -1);
@@ -594,6 +605,16 @@ void Skeleton3D::set_bone_custom_pose(int p_bone, const Transform &p_custom_pose
 Transform Skeleton3D::get_bone_custom_pose(int p_bone) const {
 	ERR_FAIL_INDEX_V(p_bone, bones.size(), Transform());
 	return bones[p_bone].custom_pose;
+}
+
+void Skeleton3D::reset_bone_poses() {
+	Skeleton3D::Bone *bones_w = bones.ptrw();
+	const int size = bones.size();
+	for (int i = 0; i < size; ++i) {
+		bones_w[i].pose = Transform();
+	}
+
+	_make_dirty();
 }
 
 void Skeleton3D::_make_dirty() {

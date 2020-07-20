@@ -122,7 +122,13 @@ class Skeleton3DEditor : public VBoxContainer {
 	friend class Skeleton3DEditorPlugin;
 
 	enum Menu {
-		MENU_OPTION_CREATE_PHYSICAL_SKELETON
+		CREATE_PHYSICAL_SKELETON,
+		RESET_POSE,
+		SIMULATE_PHYSICAL_BONES
+	};
+
+	enum JointTreePopupMenu {
+		CREATE_PHYSICAL_BONES
 	};
 
 	struct BoneInfo {
@@ -144,6 +150,8 @@ class Skeleton3DEditor : public VBoxContainer {
 	MenuButton *options;
 	EditorFileDialog *file_dialog;
 
+	PopupMenu *joint_tree_popup;
+
 	UndoRedo *undo_redo;
 
 	void _on_click_option(int p_option);
@@ -157,7 +165,9 @@ class Skeleton3DEditor : public VBoxContainer {
 	void create_editors();
 
 	void create_physical_skeleton();
-	PhysicalBone3D *create_physical_bone(int bone_id, int bone_child_id, const Vector<BoneInfo> &bones_infos);
+
+	void create_physical_bones(const Vector<BoneId> &p_bone_ids);
+	PhysicalBone3D *create_physical_bone(BoneId bone_id) const;
 
 	Variant get_drag_data_fw(const Point2 &p_point, Control *p_from);
 	bool can_drop_data_fw(const Point2 &p_point, const Variant &p_data, Control *p_from) const;
@@ -177,6 +187,10 @@ public:
 	void _joint_tree_rmb_select(const Vector2 &p_pos);
 
 	void _update_properties();
+
+	void _reset_pose();
+
+	void _joint_tree_popup_selected(int p_option);
 
 	Skeleton3DEditor(EditorInspectorPluginSkeleton *e_plugin, EditorNode *p_editor, Skeleton3D *skeleton);
 	~Skeleton3DEditor();
